@@ -1,0 +1,72 @@
+.login{
+  background-color: black;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  color: white !important;
+}
+
+.login-left{
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-right{
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-header{
+  font-size: 2em;
+  margin: 20px 0px;
+}
+
+.login-logo{
+  width: 360px;
+}
+
+.login-form{
+  width: 45%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-robot{
+  border-radius: 15px;
+  width: 70%;
+  height: 60%;
+}
+
+.login-input{
+  height: 40px;
+  border-radius: 6px;
+  padding-left: 10px;
+  background-color: #3C3C3C;
+  border: 1px solid #585858;
+  color: white;
+
+}
+
+.login-input::placeholder{
+  color: gray;
+}
+
+.login-button{
+  height: 40px;
+  background-color: #0d6efd;
+  border-radius: 6px;
+  color: white;
+  margin-top: 20px;
+  font-size: 1.05rem;
+}
+.error-message {
+  color: white;
+  margin-top: 10px; /* Adds space between the login button and the error message */
+  font-size: 14px; /* Adjusts the font size to be readable */
+  text-align: center; /* Centers the error message below the button */
+}

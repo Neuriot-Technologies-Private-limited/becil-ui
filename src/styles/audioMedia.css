@@ -1,0 +1,262 @@
+/* Audiomediaai.css */
+.audioai-root {
+  display: flex;
+  background: #232323;
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Roboto', 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.audioai-sidebar {
+  width: 260px;
+  background-color: black;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 2rem 0;
+  border-right: 1.5px solid #222226;
+}
+
+.audioai-logo-block {
+  padding: 1rem 0 0.5rem 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.audioai-logo {
+  font-size: 2.1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #eaeaea;
+  margin-left: 1.2rem;
+}
+.audioai-logo-img {
+  width: 100%;
+  max-width: 180px;
+  display: block;
+  margin-left: 0.2rem;
+  margin-bottom: 0.2rem;
+  margin-top: -0.8rem;
+  height: auto;
+}
+.audioai-logo-subtext {
+  font-size: 1.1rem;
+  color: #bdbdbd;
+  margin-top: -10px;
+  margin-bottom: 18px;
+  margin-left: 1.4rem;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  position: relative;
+  left: 6px;
+}
+
+.audioai-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 2.5rem;
+}
+.audioai-nav-link {
+  padding: 0.9rem 2.2rem;
+  font-size: 1.15rem;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  margin: 0 1rem;
+}
+.audioai-nav-link.active, .audioai-nav-link:hover {
+  background: #23232b;
+  color: #fff;
+}
+
+.audioai-sidebar-branding {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 1.05rem;
+  color: #8e8fa1;
+  opacity: 0.85;
+}
+.audioai-sidebar-branding a {
+  color: #8e8fa1;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.audioai-sidebar-branding a:hover {
+  color: #fff;
+}
+.audioai-branding-bold {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.audioai-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #232323;
+}
+
+.audioai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #18181f;
+  padding: 0.5rem 2.5rem 0.5rem 2.5rem;
+  border-bottom: 1.5px solid #222226;
+  min-height: 48px;
+}
+.audioai-header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+}
+.audioai-header-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #fff;
+}
+.audioai-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+}
+
+.audioai-main-content {
+  flex: 1;
+  padding: 2.5rem 2.5rem 0 2.5rem;
+  background: #232323;
+}
+.audioai-main-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.audioai-search-box {
+  position: relative;
+  width: 320px;
+}
+.audioai-search-box input {
+  width: 100%;
+  padding: 0.7rem 2.2rem 0.7rem 2.2rem;
+  border-radius: 8px;
+  border: none;
+  background: #18181f;
+  color: #fff;
+  font-size: 1.1rem;
+  outline: none;
+}
+.audioai-search-icon {
+  position: absolute;
+  left: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  color: #bdbdbd;
+}
+.audioai-btn {
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: #444655;
+  color: #fff;
+  transition: background 0.2s;
+}
+.audioai-btn-primary {
+  background: #bdbdbd;
+  color: #232323;
+}
+.audioai-btn-primary:hover {
+  background: #fff;
+  color: #18181f;
+}
+
+.audioai-table-block {
+  background: #444655;
+  border-radius: 12px;
+  padding: 1.2rem 1.2rem 0.5rem 1.2rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.audioai-table-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.7rem;
+}
+.audioai-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #eaeaea;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.audioai-table th, .audioai-table td {
+  padding: 0.7rem 1.1rem;
+  text-align: left;
+  font-size: 1.05rem;
+}
+.audioai-table th {
+  background: #888;
+  color: #fff;
+  font-weight: 600;
+}
+.audioai-table tr {
+  background: #eaeaea;
+}
+.audioai-table tr:nth-child(even) {
+  background: #d3d3d3;
+}
+.audioai-status-active {
+  color: #1a7f37;
+  font-weight: 600;
+}
+.audioai-status-inactive {
+  color: #b91c1c;
+  font-weight: 600;
+}
+.audioai-action-icon {
+  font-size: 1.2rem;
+  margin-right: 0.7rem;
+  color: #23232b;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.audioai-action-icon:last-child {
+  margin-right: 0;
+}
+.audioai-action-icon:hover {
+  color: #bdbdbd;
+}
+.audioai-table-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.2rem 0 0.5rem 0;
+}
+.audioai-pagination-arrow {
+  font-size: 1.3rem;
+  color: #23232b;
+  background: #bdbdbd;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.audioai-pagination-arrow:hover {
+  background: #fff;
+  color: #18181f;
+} 
+
+.waveform-row{
+  column-span: 100%;
+}
