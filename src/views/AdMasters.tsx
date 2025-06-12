@@ -42,56 +42,69 @@ export default function AdMasters() {
           <div className="audioai-main-toolbar">
             <div className="audioai-search-box">
               <input type="text" placeholder="Search..." />
-              <span className="audioai-search-icon">🔍</span>
             </div>
             <button className="audioai-btn audioai-btn-primary" onClick={() => setModal(true)}>
               + New Ad Master
             </button>
           </div>
-          <div className="audioai-table-block">
-            <div className="audioai-table-title">All Ad Masters</div>
-            <table className="audioai-table">
-              <thead>
-                <tr>
-                  <th>Brand</th>
-                  <th>Advertisement</th>
-                  <th>Duration</th>
-                  <th>Upload Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ads.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>{row.brand}</td>
-                    <td>{row.advertisement}</td>
-                    <td>{formatDuration(row.duration)}</td>
-                    <td>{row.upload_date.toString().slice(0, 10)}</td>
-                    <td className={row.status === "Active" ? "audioai-status-active" : "audioai-status-inactive"}>{row.status}</td>
-                    <td>
-                      <FaMusic className="audioai-action-icon" title="Music" />
-                      <FaCloudDownloadAlt className="audioai-action-icon" title="Download" />
-                      <FaTimes className="audioai-action-icon" title="Delete" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="audioai-table-pagination">
-              <span className="audioai-pagination-arrow">
-                <FaAngleDoubleLeft />
-              </span>
-              <span className="audioai-pagination-arrow">
-                <FaAngleLeft />
-              </span>
-              <span className="audioai-pagination-arrow">
-                <FaAngleRight />
-              </span>
-              <span className="audioai-pagination-arrow">
-                <FaAngleDoubleRight />
-              </span>
+          <div className="text-xl font-bold text-white !mb-4">All Ad Masters</div>
+          <div className="w-full flex flex-col">
+            <div className="bg-neutral-700 h-16 text-neutral-200 flex items-center px-4 font-bold">
+              <div className="w-[15%]">Brand</div>
+              <div className="w-[35%]">Advertisement</div>
+              <div className="w-[15%] text-center">Duration</div>
+              <div className="w-[10%] text-center">Upload Date</div>
+              <div className="w-[15%] text-center">Status</div>
+              <div className="w-[10%]"></div>
             </div>
+            <div className="flex flex-col bg-white">
+              {ads.map((row, idx) => (
+                <div key={idx} className="p-4 flex items-center odd:bg-gray-100">
+                  <div className="w-[15%]">{row.brand}</div>
+                  <div className="w-[35%]">{row.advertisement}</div>
+                  <div className="w-[15%] text-center">{formatDuration(row.duration)}</div>
+                  <div className="w-[10%] text-center">{row.upload_date.toString().slice(0, 10)}</div>
+                  <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-600" : " text-red-600")}>{row.status}</div>
+                  <div className="w-[10%] flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      className="p-2 disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-gray-400"
+                      title="Play"
+                    >
+                      <FaMusic />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-2 disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-gray-400"
+                      title="Download"
+                    >
+                      <FaCloudDownloadAlt/>
+                    </button>
+                    <button
+                      type="button"
+                      className="p-2 disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-gray-400"
+                      title="Status"
+                    >
+                      <FaTimes/>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="audioai-table-pagination">
+            <span className="audioai-pagination-arrow">
+              <FaAngleDoubleLeft />
+            </span>
+            <span className="audioai-pagination-arrow">
+              <FaAngleLeft />
+            </span>
+            <span className="audioai-pagination-arrow">
+              <FaAngleRight />
+            </span>
+            <span className="audioai-pagination-arrow">
+              <FaAngleDoubleRight />
+            </span>
           </div>
         </div>
       </main>

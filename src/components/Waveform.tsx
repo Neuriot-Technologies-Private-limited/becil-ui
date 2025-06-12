@@ -1,65 +1,50 @@
-import React, { useRef, useState } from "react";
-import WaveSurfer from "@wavesurfer/react";
-import RegionsPlugin from "wavesurfer.js/dist/plugins/regions";
 
-const AUDIO_URL = "/audio.mp3";
+import { Tooltip } from "react-tooltip";
+import type { AdDetectionResult } from "src/types";
 
-export default function Waveform ({hidden} : {hidden: boolean}){
-  const wavesurferRef = useRef(null);
-  const [url, setUrl] = useState();
-  const [loaded, setLoaded] = useState(false);
-  const regions = [
-    {
-      id: "intro",
-      start: 0,
-      end: 5,
-      color: "rgba(0, 123, 255, 0.1)",
-      data: { label: "Intro" },
-    },
-    {
-      id: "speech",
-      start: 6,
-      end: 12,
-      color: "rgba(40, 167, 69, 0.1)",
-      data: { label: "Speech" },
-    },
-    {
-      id: "music",
-      start: 13,
-      end: 15,
-      color: "rgba(255, 193, 7, 0.1)",
-      data: { label: "Music Segment" },
-    },
-  ];
+type WaveformProps = {
+  duration: number; // in seconds
+  amplitudes: number[]; // array of normalized values (0-1)
+  regions: AdDetectionResult[];
+};
 
-  const handleReady = (ws) => {
-    console.log("WaveSurfer is ready");
-    wavesurferRef.current = ws;
-  };
+export default function Waveform({ duration, amplitudes, regions }: WaveformProps) {
+  const totalBars = amplitudes.length;
+  const secondsPerBar = duration / totalBars;
+  console.log(secondsPerBar)
+  const barHeight = 75;
 
-  const loadAudio = () => {
-    setUrl(AUDIO_URL);
+  const getRegionForIndex = (index: number): AdDetectionResult | undefined => {
+    const time = index * secondsPerBar;
+    return regions.find(r => time >= r.start_time_seconds && time <= r.end_time_seconds);
   };
 
   return (
-    <div className={"p-4 border rounded shadow" + (hidden ? " hidden" : "")}>
-      <WaveSurfer
-        height={100}
-        waveColor="#ccc"
-        progressColor="#333"
-        cursorColor="#000"
-        url={url}
-        onReady={handleReady}
-        plugins={[
-          RegionsPlugin.create({
-            regions,
-            dragSelection: false,
-          }),
-        ]}
-      />
-      <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded" onClick={loadAudio}>
-        {loaded ? "Reload Audio" : "Load Audio"}
-      </button>
+    <div className="p-4 rounded-lg">
+      <div className="flex items-center relative">
+        {amplitudes.map((amp, index) => {
+          const region = getRegionForIndex(index);
+          const height = Math.max(amp * barHeight, 15); // minimum height for visibility
+          const tooltipId = `tooltip-${index}`;
+
+          return (
+            <div
+              key={index}
+              className={"h-full flex items-center w-[2px] " + (region ? "bg-red-100" : "")}
+              style={{ height: `${barHeight * 1.2}px` }}
+              data-tooltip-id={tooltipId}
+              data-tooltip-content={region ? `${region.brand}: ${region.description}` : ""}
+            >
+              {region && <Tooltip id={tooltipId} place="top" className="z-50" />}
+              <div
+                className={`w-full rounded-full transition-all duration-300 ${region ? "bg-red-500" : "bg-gray-300"} relative`}
+                style={{ height: `${height}px` }}
+              ></div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
-};
+}
+

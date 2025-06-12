@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '@styles/UploadAdModal.css'; // CSS for modal styling
+import { FaXmark } from 'react-icons/fa6';
 
 const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
   const [brand, setBrand] = useState('');
@@ -56,7 +57,9 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <button className="close-btn" onClick={onClose}>ž</button>
+        <button className="close-btn" onClick={onClose}>
+          <FaXmark />
+        </button>
         <h2>Upload New Ad</h2>
         <form onSubmit={handleSubmit}>
           <label>
@@ -65,16 +68,6 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
               type="text"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              required
-            />
-          </label>
-
-          <label>
-            Duration (seconds):
-            <input
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
               required
             />
           </label>

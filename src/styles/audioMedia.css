@@ -3,7 +3,7 @@
   display: flex;
   background: #232323;
   min-height: 100vh;
-  font-family: 'Segoe UI', 'Roboto', 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: "Segoe UI", "Roboto", "Open Sans", "Helvetica Neue", sans-serif;
 }
 
 .audioai-sidebar {
@@ -63,10 +63,13 @@
   color: #fff;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   margin: 0 1rem;
 }
-.audioai-nav-link.active, .audioai-nav-link:hover {
+.audioai-nav-link.active,
+.audioai-nav-link:hover {
   background: #23232b;
   color: #fff;
 }
@@ -129,7 +132,7 @@
 
 .audioai-main-content {
   flex: 1;
-  padding: 2.5rem 2.5rem 0 2.5rem;
+  padding: 3rem 3rem;
   background: #232323;
 }
 .audioai-main-toolbar {
@@ -180,62 +183,6 @@
   color: #18181f;
 }
 
-.audioai-table-block {
-  background: #444655;
-  border-radius: 12px;
-  padding: 1.2rem 1.2rem 0.5rem 1.2rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}
-.audioai-table-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 0.7rem;
-}
-.audioai-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #eaeaea;
-  border-radius: 8px;
-  overflow: hidden;
-}
-.audioai-table th, .audioai-table td {
-  padding: 0.7rem 1.1rem;
-  text-align: left;
-  font-size: 1.05rem;
-}
-.audioai-table th {
-  background: #888;
-  color: #fff;
-  font-weight: 600;
-}
-.audioai-table tr {
-  background: #eaeaea;
-}
-.audioai-table tr:nth-child(even) {
-  background: #d3d3d3;
-}
-.audioai-status-active {
-  color: #1a7f37;
-  font-weight: 600;
-}
-.audioai-status-inactive {
-  color: #b91c1c;
-  font-weight: 600;
-}
-.audioai-action-icon {
-  font-size: 1.2rem;
-  margin-right: 0.7rem;
-  color: #23232b;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-.audioai-action-icon:last-child {
-  margin-right: 0;
-}
-.audioai-action-icon:hover {
-  color: #bdbdbd;
-}
 .audioai-table-pagination {
   display: flex;
   justify-content: flex-end;
@@ -250,13 +197,15 @@
   border-radius: 4px;
   padding: 0.2rem 0.6rem;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 .audioai-pagination-arrow:hover {
   background: #fff;
   color: #18181f;
-} 
+}
 
-.waveform-row{
+.waveform-row {
   column-span: 100%;
 }

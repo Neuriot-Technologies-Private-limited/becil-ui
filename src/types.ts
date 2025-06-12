@@ -13,3 +13,21 @@ export interface AdMaster{
   duration: number;
   status: string;
 }
+
+export interface AdDetectionResult {
+  id: number;
+  ad_id: number;
+  broadcast_id: number;
+  brand: string;
+  description: string;
+  start_time_seconds: number;
+  end_time_seconds: number;
+  duration_seconds: number;
+  correlation_score: number;
+  raw_correlation: number;
+  mfcc_correlation: number;
+  overlap_duration: number;
+  detection_timestamp: string;
+  processing_status: string;
+  total_matches_found: number;
+}
