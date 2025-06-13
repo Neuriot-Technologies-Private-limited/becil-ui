@@ -8,6 +8,7 @@ import { type AdMaster } from "/src/types";
 import { useOutletContext } from "react-router";
 
 export default function AdMasters() {
+  const apiUrl = import.meta.env["VITE_API_URL"];
   const user = { name: "Rohit", avatar: "https://randomuser.me/api/portraits/men/32.jpg" };
   const [modal, setModal] = useState(false);
   const [ads, setAds] = useState<AdMaster[]>([]);
@@ -17,7 +18,7 @@ export default function AdMasters() {
     setActiveLink("/admasters");
     const fetchAds = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/ads");
+        const response = await axios.get(`${apiUrl}/ads`);
         setAds(response.data);
         console.log(response.data);
       } catch (error) {

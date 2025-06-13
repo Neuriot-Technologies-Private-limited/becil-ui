@@ -25,7 +25,7 @@ export default function Broadcasts() {
     setActiveLink("/broadcasts");
     async function fetchBroadcasts() {
       try {
-        const response = await fetch("http://localhost:8000/api/broadcasts");
+        const response = await fetch(`${apiUrl}/broadcasts`);
         if (!response.ok) {
           throw new Error("Failed to fetch broadcasts");
         }
@@ -72,7 +72,7 @@ export default function Broadcasts() {
       const message: string = (await res.json()).message;
       if (res.status == 200) {
         setDisabledButtons(prev => prev.filter(i => i != id))
-        const response = await fetch("http://localhost:8000/api/broadcasts");
+        const response = await fetch(`${apiUrl}/broadcasts`);
         if (!response.ok) {
           throw new Error("Failed to fetch broadcasts");
         }
