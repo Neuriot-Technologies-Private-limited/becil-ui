@@ -9,7 +9,6 @@ import { useOutletContext } from "react-router";
 
 export default function AdMasters() {
   const apiUrl = import.meta.env["VITE_API_URL"];
-  const user = { name: "Rohit", avatar: "https://randomuser.me/api/portraits/men/32.jpg" };
   const [modal, setModal] = useState(false);
   const [ads, setAds] = useState<AdMaster[]>([]);
   const { setActiveLink } = useOutletContext();
@@ -35,8 +34,8 @@ export default function AdMasters() {
         <header className="audioai-header">
           <div className="audioai-header-title">Ad Masters</div>
           <div className="audioai-header-user">
-            <img src={user.avatar} alt="User" className="audioai-user-avatar" />
-            <span>{user.name}</span>
+            <img src="/man.png" alt="User" className="audioai-user-avatar" />
+            <span>Rohit</span>
           </div>
         </header>
         <div className="audioai-main-content">

@@ -60,7 +60,7 @@ export default function Broadcasts() {
 
   const handleProcessingStart = async (id: number, file_name: string) => {
     try {
-      setDisabledButtons(prev => [...prev, id])
+      setDisabledButtons((prev) => [...prev, id]);
       const res = await fetch(`${apiUrl}/broadcasts/start-processing`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,7 +71,7 @@ export default function Broadcasts() {
       });
       const message: string = (await res.json()).message;
       if (res.status == 200) {
-        setDisabledButtons(prev => prev.filter(i => i != id))
+        setDisabledButtons((prev) => prev.filter((i) => i != id));
         const response = await fetch(`${apiUrl}/broadcasts`);
         if (!response.ok) {
           throw new Error("Failed to fetch broadcasts");
@@ -90,8 +90,8 @@ export default function Broadcasts() {
       <header className="audioai-header">
         <div className="audioai-header-title">Broadcasts</div>
         <div className="audioai-header-user">
-          <img src={user.avatar} alt="User" className="audioai-user-avatar" />
-          <span>{user.name}</span>
+          <img src="/man.png" alt="User" className="audioai-user-avatar" />
+          <span>Rohit</span>
         </div>
       </header>
       <div className="audioai-main-content">
@@ -152,7 +152,7 @@ export default function Broadcasts() {
                       type="button"
                       className="p-2 disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl disabled:text-gray-400 cursor-pointer"
                       onClick={() => handleProcessingStart(row.id, row.filename)}
-                      disabled={row.status === "Processed" || row.status === "Processing" || disabledButtons.findIndex(i => i === row.id) != -1}
+                      disabled={row.status === "Processed" || row.status === "Processing" || disabledButtons.findIndex((i) => i === row.id) != -1}
                       title="Process Audio"
                     >
                       <GiDiamonds />
