@@ -7,7 +7,7 @@
 }
 
 .audioai-sidebar {
-  width: 260px;
+  width: 20rem;
   background-color: black;
   color: #fff;
   display: flex;
@@ -141,28 +141,7 @@
   align-items: center;
   margin-bottom: 1.5rem;
 }
-.audioai-search-box {
-  position: relative;
-  width: 320px;
-}
-.audioai-search-box input {
-  width: 100%;
-  padding: 0.7rem 2.2rem 0.7rem 2.2rem;
-  border-radius: 8px;
-  border: none;
-  background: #18181f;
-  color: #fff;
-  font-size: 1.1rem;
-  outline: none;
-}
-.audioai-search-icon {
-  position: absolute;
-  left: 0.7rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.2rem;
-  color: #bdbdbd;
-}
+
 .audioai-btn {
   padding: 0.7rem 1.5rem;
   border-radius: 8px;

@@ -3,6 +3,7 @@ export interface Broadcast{
   broadcast_recording: string;
   duration: number;
   broadcast_date: Date;
+  filename: string;
   status: string;
 }
 
@@ -11,6 +12,7 @@ export interface AdMaster{
   advertisement: string;
   upload_date: Date;
   duration: number;
+  filename: string;
   status: string;
 }
 

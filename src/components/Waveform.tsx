@@ -30,14 +30,14 @@ export default function Waveform({ duration, amplitudes, regions }: WaveformProp
           return (
             <div
               key={index}
-              className={"h-full flex items-center w-[2px] " + (region ? "bg-red-100" : "")}
+              className={"h-full flex items-center w-[2px] " + (region ? "bg-orange-100" : "")}
               style={{ height: `${barHeight * 1.2}px` }}
               data-tooltip-id={tooltipId}
               data-tooltip-content={region ? `${region.brand}: ${region.description}` : ""}
             >
               {region && <Tooltip id={tooltipId} place="top" className="z-50" />}
               <div
-                className={`w-full rounded-full transition-all duration-300 ${region ? "bg-red-500" : "bg-gray-300"} relative`}
+                className={`w-full rounded-full transition-all duration-300 ${region ? "bg-orange-500" : "bg-gray-300"} relative`}
                 style={{ height: `${height}px` }}
               ></div>
             </div>

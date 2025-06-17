@@ -60,11 +60,12 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
         body: JSON.stringify({
           radio_station: radioStation,
           broadcast_recording: recordingName,
-          filename: getLastSegment(url),
+          filename: decodeURIComponent(getLastSegment(url)!),
           duration: duration,
           status: "Pending",
         }),
       });
+      console.log(decodeURIComponent(getLastSegment(url)!))
 
       if (!adRes.ok) {
         const errorText = await adRes.text();
@@ -80,8 +81,11 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
       alert("Upload failed. See console for details.");
     } finally {
       setIsUploading(false);
+      setRadioStation("")
+      setRecordingName("")
     }
   };
+
   if (!isOpen) return null;
 
 
