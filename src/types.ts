@@ -17,7 +17,7 @@ export interface AdMaster{
 }
 
 export interface AdDetectionResult {
-  id: number;
+  id: string | number;
   ad_id: number;
   broadcast_id: number;
   brand: string;

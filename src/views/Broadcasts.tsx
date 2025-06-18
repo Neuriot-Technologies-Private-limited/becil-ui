@@ -272,7 +272,7 @@ export default function Broadcasts() {
                         </div>
                       </div>
 
-                      <Waveform duration={row.duration} amplitudes={generateAmplitudes(row.broadcast_recording)} regions={waveformData} />
+                      <Waveform duration={row.duration} amplitudes={generateAmplitudes(row.broadcast_recording)} regionProps={waveformData} />
                     </div>
                   )}
                 </div>

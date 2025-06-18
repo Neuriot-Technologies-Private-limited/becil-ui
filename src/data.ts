@@ -1,3 +1,6 @@
+import { v4 as uuidv4 } from 'uuid';
+import { type AdDetectionResult } from './types';
+
 export const sampleBroadcasts = [
   {
     radio_station: "Radio One 101.2 FM",
@@ -21,3 +24,21 @@ export const sampleBroadcasts = [
     status: "cancelled"
   }
 ];
+
+export const emptyAdSlot: AdDetectionResult = {
+  id: uuidv4(),
+  ad_id: -1,
+  broadcast_id: 0,
+  brand: "Empty Slot",
+  description: "",
+  start_time_seconds: 0,
+  end_time_seconds: 0,
+  duration_seconds: 0,
+  correlation_score: 0,
+  raw_correlation: 0,
+  mfcc_correlation: 0,
+  overlap_duration: 0,
+  detection_timestamp: "",
+  processing_status: "",
+  total_matches_found: 0,
+};
