@@ -5,13 +5,15 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCloudDownloadAlt, FaMusic, FaSearch, FaTimes } from "react-icons/fa";
 import { type AdMaster } from "/src/types";
-import { FadeLoader, MoonLoader, PuffLoader } from "react-spinners";
+import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
 import MusicControls from "@components/MusicControls";
+import { FaCheck, FaPlay, FaXmark } from "react-icons/fa6";
 
 export default function AdMasters() {
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const [modal, setModal] = useState(false);
+  const [playingAdId, setPlayingAdId] = useState(-1)
+  const [curDuration, setCurDuration] = useState({ duration: 0, source: "controls" });
   const [src, setSrc] = useState("");
   const [metadata, setMetadata] = useState<AdMaster>();
   const [ads, setAds] = useState<AdMaster[]>([]);
@@ -19,7 +21,9 @@ export default function AdMasters() {
     id: -1,
     type: "Music",
   });
-  const { setActiveLink } = useOutletContext();
+
+  const apiUrl = import.meta.env["VITE_API_URL"];
+  const { setActiveLink } = useOutletContext<{setActiveLink: (arg0: string) => unknown}>();
 
   useEffect(() => {
     setActiveLink("/admasters");
@@ -48,6 +52,7 @@ export default function AdMasters() {
       const audioUrl = URL.createObjectURL(blob);
       setSrc(audioUrl);
       setMetadata(ad);
+      setPlayingAdId(ad.id)
     } catch (err) {
       console.error("Error fetching audio:", err);
     } finally {
@@ -112,7 +117,7 @@ export default function AdMasters() {
 
   return (
     <>
-      <main className="audioai-main relative">
+      <main className="audioai-main">
         <header className="flex px-12 items-end justify-between h-20">
           <div className="uppercase font-light text-3xl text-white tracking-widest">Ad Masters</div>
           <div className="audioai-header-user">
@@ -120,10 +125,10 @@ export default function AdMasters() {
             <span>Rohit</span>
           </div>
         </header>
-        <div className="audioai-main-content">
+        <div className="flex p-12 pb-16 flex-col">
           <div className="flex justify-between !mb-8">
             <div className="flex items-center gap-4 w-1/4">
-              <FaSearch className="text-neutral-400" size={16}/>
+              <FaSearch className="text-neutral-400" size={16} />
               <input type="text" placeholder="Search Ads" className="h-10 bg-neutral-700 grow text-white px-4 rounded-md focus:outline-none" />
             </div>
             <button className="h-10 bg-gray-200 rounded-md px-4 font-semibold" onClick={() => setModal(true)}>
@@ -142,7 +147,7 @@ export default function AdMasters() {
             </div>
             <div className="flex flex-col bg-white">
               {ads.map((row, idx) => (
-                <div key={idx} className="py-4 flex items-center odd:bg-gray-100">
+                <div key={idx} className={"py-4 flex items-center " + (row.id === playingAdId ? "music-bg" : "odd:bg-gray-100")}>
                   <div className="w-[15%] pl-4">{row.brand}</div>
                   <div className="w-[35%]">{row.advertisement}</div>
                   <div className="w-[15%] text-center">{formatDuration(row.duration)}</div>
@@ -151,27 +156,28 @@ export default function AdMasters() {
                   <div className="w-[10%] flex gap-2 justify-end pr-4">
                     <button
                       type="button"
-                      className="size-10 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0"
+                      className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer shrink-0 disabled:cursor-default"
                       title="Play"
                       onClick={() => handleMusic(row)}
+                      disabled={playingAdId === row.id}
                     >
-                      {buttonLoading.id === row.id && buttonLoading.type === "Music" ? <PuffLoader color="black" size={15} /> : <FaMusic />}
+                      {buttonLoading.id === row.id && buttonLoading.type === "Music" ? <PuffLoader color="black" size={15} /> : (playingAdId === row.id ? <FaMusic />: <FaPlay />)}
                     </button>
                     <button
                       type="button"
-                      className="size-10 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0"
+                      className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0 disabled:cursor-default"
                       title="Download"
                       onClick={() => handleDownload(row)}
                     >
-                      {buttonLoading.id === row.id && buttonLoading.type === "Download" ? <PuffLoader color="black" size={12} /> : <FaCloudDownloadAlt />}
+                      {buttonLoading.id === row.id && buttonLoading.type === "Download" ? <PuffLoader color="black" size={12} /> : <FaCloudDownloadAlt size={14}/>}
                     </button>
                     <button
                       type="button"
-                      className="size-10 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0"
+                      className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0 disabled:cursor-default"
                       title="Status"
                       onClick={() => handleStatusUpdate(row.id, row.status)}
                     >
-                      <FaTimes />
+                      {row.status === "Active" ? <FaXmark size={16}/> : <FaCheck size={14}/>}
                     </button>
                   </div>
                 </div>
@@ -195,7 +201,16 @@ export default function AdMasters() {
         </div>
       </main>
       <UploadAdModal isOpen={modal} onClose={() => setModal(false)} onAdUploaded={(newAd: AdMaster) => setAds([...ads, newAd])} />
-      {src !== "" ? <MusicControls audioSrc={src} title={metadata.advertisement} header={metadata.brand} duration={metadata.duration} /> : null}
+      {src !== "" ? (
+        <MusicControls
+          audioSrc={src}
+          title={metadata.advertisement}
+          header={metadata.brand}
+          duration={metadata.duration}
+          curDurationProp={curDuration}
+          setCurDuration={setCurDuration}
+        />
+      ) : null}
     </>
   );
 }

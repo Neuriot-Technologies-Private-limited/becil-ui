@@ -5,15 +5,18 @@ import { emptyAdSlot } from "/src/data";
 import type { AdDetectionResult } from "src/types";
 
 type WaveformProps = {
-  duration: number; // in seconds
-  amplitudes: number[]; // array of normalized values (0-1)
-  regionProps: AdDetectionResult[];
+  duration: number;
+  amplitudes: number[];
+  regionProps: {broadcast_id: number, data: AdDetectionResult[]}
+  curDuration: {duration: number, source: string};
+  setCurDuration: any;
+  playingBroadcastId: number;
 };
 
-export default function Waveform({ duration, amplitudes, regionProps }: WaveformProps) {
+export default function Waveform({ duration, amplitudes, regionProps, curDuration, setCurDuration, playingBroadcastId }: WaveformProps) {
   const totalBars = amplitudes.length;
   const secondsPerBar = duration / totalBars;
-  const barHeight = 75;
+  const barHeight = 75, barWidth = 2;
 
   const [regions, setRegions] = useState<AdDetectionResult[]>([]);
   const [colors, setColors] = useState<Record<string | number, string>>({});
@@ -57,7 +60,6 @@ export default function Waveform({ duration, amplitudes, regionProps }: Waveform
     // Add empty time slot between last ad
     // occurence and broadcast end, if exists
     if (lastAd!) {
-      console.log("lastAd", lastAd);
       if (lastAd.end_time_seconds < duration - 1) {
         const newRegion = { ...emptyAdSlot };
         newRegion.start_time_seconds = lastAd.end_time_seconds + 1;
@@ -68,8 +70,13 @@ export default function Waveform({ duration, amplitudes, regionProps }: Waveform
     return newRegions;
   };
 
+  function handleSeek(time: number){
+    if(regionProps.broadcast_id === playingBroadcastId)
+      setCurDuration({duration: time, source: "waveform"})
+  }
+
   useEffect(() => {
-    const newRegions = manipulateRegions(regionProps);
+    const newRegions = manipulateRegions(regionProps.data);
     setRegions(newRegions);
     const colorMap: Record<string | number, string> = {};
     for (const r of newRegions) {
@@ -89,6 +96,7 @@ export default function Waveform({ duration, amplitudes, regionProps }: Waveform
   return (
     <div className="p-4 rounded-lg">
       <div className="flex items-center relative">
+        <div className={"bg-[#00000022] border-r-2 border-black absolute h-full left-0 w-12 pointer-events-none z-20 " + (regionProps.broadcast_id !== playingBroadcastId ? "hidden" : "")} style={{width: `${barWidth * curDuration.duration / secondsPerBar}px`}}></div>
         {amplitudes.map((amp, index) => {
           const region = getRegionForIndex(index);
           const height = Math.max(amp * barHeight, 15); // minimum height for visibility
@@ -97,12 +105,13 @@ export default function Waveform({ duration, amplitudes, regionProps }: Waveform
           return (
             <div
               key={index}
-              className={"h-full flex items-center w-[2px] " + (region.ad_id !== -1 ? "bg-orange-100" : "")}
-              style={{ height: `${barHeight * 1.2}px` }}
+              className={"h-full flex items-center relative " + (region.ad_id !== -1 ? "bg-orange-100" : "bg-gray-100")}
+              style={{ height: `${barHeight * 1.2}px`, width: `${barWidth}px` }}
               data-tooltip-id={tooltipId}
               data-tooltip-content={
                 region ? `${region.brand}  |  ${formatSecondsToHHMMSS(region.start_time_seconds)} - ${formatSecondsToHHMMSS(region.end_time_seconds)}` : ""
               }
+              onClick={() => handleSeek(index * secondsPerBar)}
             >
               {region && <Tooltip id={tooltipId} place="top" className="z-50" />}
               <div

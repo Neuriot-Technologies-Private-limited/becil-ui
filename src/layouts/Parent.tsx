@@ -21,21 +21,21 @@ export default function Parent() {
 
   return (
     <div className="audioai-root">
-      <aside className="audioai-sidebar">
-        <div className="audioai-logo-block">
-          <img src="/findoutAi.jpg" alt="findoutAiLogo" className="audioai-logo-img" />
-          <div className="audioai-logo-subtext">For Audio Media</div>
+      <aside className="w-80 text-white bg-black flex flex-col pt-12 shrink-0">
+        <div className="flex flex-col gap-2 justify-end !mb-8 pl-8">
+          <img src="/findoutAi.jpg" alt="findoutAiLogo" className="w-2/3" />
+          <div className="text-sm text-neutral-300 font-light tracking-wide">For Audio Media</div>
         </div>
-        <nav className="audioai-nav">
+        <nav className="flex flex-col gap-2 px-4">
           {sidebarLinks.map((obj) => (
-            <a key={obj.path} className={`audioai-nav-link${activeLink === obj.path ? " active" : ""}`} onClick={() => handleLink(obj.path)}>
+            <a key={obj.path} className={`p-5 rounded-md hover:bg-neutral-800 cursor-pointer text-lg ${activeLink === obj.path ? " font-bold text-xl" : ""}`} onClick={() => handleLink(obj.path)}>
               {obj.title}
             </a>
           ))}
         </nav>
-        <div className="audioai-sidebar-branding">
+        <div className="text-center !mt-12 text-sm text-neutral-500">
           <a href="https://www.neuriot.com/" target="_blank" rel="noopener noreferrer">
-            Powered by <span className="audioai-branding-bold">neurIOT Labs</span>
+            Powered by <span className="font-bold">neurIOT Labs</span>
           </a>
         </div>
       </aside>

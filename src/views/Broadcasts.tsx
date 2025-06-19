@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { FaPlay } from "react-icons/fa";
 import MusicControls from "@components/MusicControls";
 import { GiDiamonds } from "react-icons/gi";
 import UploadBroadcastModal from "@components/UploadBroadcastModal";
@@ -18,10 +19,12 @@ export default function Broadcasts() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [src, setSrc] = useState("");
   const [metadata, setMetadata] = useState<Broadcast>();
+  const [playingBroadcastId, setPlayingBroadcastId] = useState(-1);
   const [modal, setModal] = useState(false);
-  const { setActiveLink } = useOutletContext();
+  const [curDuration, setCurDuration] = useState({ duration: 0, source: "controls" });
+  const { setActiveLink } = useOutletContext<{setActiveLink: (arg0: string) => unknown}>();
   const [openWaveform, setOpenWaveform] = useState(-1);
-  const [waveformData, setWaveformData] = useState<AdDetectionResult[]>([]);
+  const [waveformData, setWaveformData] = useState<{ broadcast_id: number; data: AdDetectionResult[] }>({ broadcast_id: -1, data: [] });
   const [buttonLoading, setButtonLoading] = useState({
     id: -1,
     type: "Music",
@@ -49,19 +52,17 @@ export default function Broadcasts() {
   async function handleWaveformClick(b_id: number) {
     if (openWaveform !== b_id) {
       setOpenWaveform(b_id);
-      console.log(b_id);
       try {
         const res = await fetch(`${apiUrl}/broadcasts/${b_id}/detections`);
         const data = await res.json();
 
-        setWaveformData(data);
-        console.log(data);
+        setWaveformData({broadcast_id: b_id, data});
       } catch (er) {
         console.log(er);
       }
     } else {
       setOpenWaveform(-1);
-      setWaveformData([]);
+      setWaveformData({broadcast_id: -1, data: []});
     }
   }
 
@@ -78,6 +79,7 @@ export default function Broadcasts() {
       const blob = await res.blob();
       const audioUrl = URL.createObjectURL(blob);
       setSrc(audioUrl);
+      setPlayingBroadcastId(brd.id);
       setMetadata(brd);
     } catch (err) {
       console.error("Error fetching audio:", err);
@@ -152,7 +154,7 @@ export default function Broadcasts() {
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Report_${broadcast.broadcast_recording}.xlsx`
+      a.download = `Report_${broadcast.broadcast_recording}.xlsx`;
       a.click();
 
       URL.revokeObjectURL(url); // Clean up the object URL
@@ -172,11 +174,11 @@ export default function Broadcasts() {
           <span>Rohit</span>
         </div>
       </header>
-      <div className="audioai-main-content">
+      <div className="flex p-12 pb-16 flex-col">
         <div className="flex justify-between !mb-8">
           <div className="flex items-center gap-4 w-1/4">
-            <FaSearch className="text-neutral-400" size={16}/>
-          <input type="text" placeholder="Search broadcasts" className="h-10 bg-neutral-700 text-white grow px-4 rounded-md focus:outline-none" />
+            <FaSearch className="text-neutral-400" size={16} />
+            <input type="text" placeholder="Search broadcasts" className="h-10 bg-neutral-700 text-white grow px-4 rounded-md focus:outline-none" />
           </div>
           <button className="h-10 bg-gray-200 rounded-md px-4 font-semibold" onClick={() => setModal(true)}>
             + New Broadcast
@@ -185,7 +187,7 @@ export default function Broadcasts() {
         <div>
           <div className="text-xl font-bold text-white !mb-4">All Broadcasts</div>
           <div className="w-full flex flex-col max-h-[80vh] overflow-auto">
-            <div className="bg-neutral-700 min-h-16 text-neutral-200 flex items-center font-bold sticky top-0">
+            <div className="bg-neutral-700 min-h-16 text-neutral-200 flex items-center font-bold sticky top-0 z-10">
               <div className="w-[15%] pl-4">Radio Station</div>
               <div className="w-[25%]">Broadcast Recording</div>
               <div className="w-[10%] text-center">Duration</div>
@@ -195,9 +197,9 @@ export default function Broadcasts() {
             </div>
             <div className="flex flex-col bg-white">
               {broadcasts.map((row, idx) => (
-                <div className="odd:bg-gray-100 bg-white" key={row.id}>
+                <div className={(playingBroadcastId === row.id ? "music-bg" : "odd:bg-gray-100 bg-white")} key={row.id}>
                   <div key={idx} className="flex items-center py-4">
-                    <div className="w-[15%] pl-4">{row.radio_station}</div>
+                    <div className="w-[15%] pl-4 flex items-center gap-4">{row.radio_station}</div>
                     <div className="w-[25%] whitespace-nowrap">
                       <p className="overflow-ellipsis">{row.broadcast_recording}</p>
                     </div>
@@ -214,11 +216,12 @@ export default function Broadcasts() {
                     <div className="w-[20%] flex justify-end gap-1 pr-4">
                       <button
                         type="button"
-                        className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
+                        className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-200 rounded-xl cursor-pointer shrink-0 disabled:cursor-default"
                         title="Play"
                         onClick={() => handleMusic(row)}
+                        disabled={playingBroadcastId === row.id}
                       >
-                        {buttonLoading.id === row.id && buttonLoading.type === "Music" ? <PuffLoader color="black" size={15} /> : <FaMusic />}
+                        {buttonLoading.id === row.id && buttonLoading.type === "Music" ? <PuffLoader color="black" size={15} /> : (playingBroadcastId === row.id ? <FaMusic /> : <FaPlay size={10}/>)}
                       </button>
                       <button
                         type="button"
@@ -227,7 +230,7 @@ export default function Broadcasts() {
                         onClick={() => handleWaveformClick(row.id)}
                         disabled={row.status !== "Processed"}
                       >
-                        <PiWaveformBold />
+                        <PiWaveformBold size={14}/>
                       </button>
                       <button
                         type="button"
@@ -236,7 +239,7 @@ export default function Broadcasts() {
                         disabled={row.status === "Processed" || row.status === "Processing" || disabledButtons.findIndex((i) => i === row.id) != -1}
                         title="Process Audio"
                       >
-                        <GiDiamonds />
+                        <GiDiamonds size={14}/>
                       </button>
                       <button
                         type="button"
@@ -244,7 +247,7 @@ export default function Broadcasts() {
                         title="Download"
                         onClick={() => handleDownload(row)}
                       >
-                        {buttonLoading.id === row.id && buttonLoading.type === "Download" ? <PuffLoader color="black" size={15} /> : <FaCloudDownloadAlt />}
+                        {buttonLoading.id === row.id && buttonLoading.type === "Download" ? <PuffLoader color="black" size={15} /> : <FaCloudDownloadAlt size={14}/>}
                       </button>
                       <button
                         type="button"
@@ -253,7 +256,7 @@ export default function Broadcasts() {
                         disabled={row.status !== "Processed"}
                         onClick={() => handleReport(row)}
                       >
-                        {buttonLoading.id === row.id && buttonLoading.type === "Report" ? <PuffLoader color="black" size={15} /> : <FaRegFileAlt />}
+                        {buttonLoading.id === row.id && buttonLoading.type === "Report" ? <PuffLoader color="black" size={15} /> : <FaRegFileAlt size={14}/>}
                       </button>
                     </div>
                   </div>
@@ -262,17 +265,24 @@ export default function Broadcasts() {
                       <div className="flex flex-col gap-2 shrink-0">
                         <div className="text-center">
                           <div className="">Ad instances</div>
-                          <div className="text-2xl font-bold">{waveformData.length}</div>
+                          <div className="text-2xl font-bold">{waveformData.data.length}</div>
                         </div>
                         <div className="text-center">
                           <div className="">Total Ad duration</div>
                           <div className="text-2xl font-bold">
-                            {formatSecondsToHHMMSS(Math.floor(waveformData.reduce((sum, ad) => sum + ad.duration_seconds, 0)))}
+                            {formatSecondsToHHMMSS(Math.floor(waveformData.data.reduce((sum, ad) => sum + ad.duration_seconds, 0)))}
                           </div>
                         </div>
                       </div>
 
-                      <Waveform duration={row.duration} amplitudes={generateAmplitudes(row.broadcast_recording)} regionProps={waveformData} />
+                      <Waveform
+                        duration={row.duration}
+                        playingBroadcastId={playingBroadcastId}
+                        amplitudes={generateAmplitudes(row.broadcast_recording)}
+                        regionProps={waveformData}
+                        curDuration={curDuration}
+                        setCurDuration={setCurDuration}
+                      />
                     </div>
                   )}
                 </div>
@@ -300,7 +310,16 @@ export default function Broadcasts() {
         onClose={() => setModal(false)}
         onBroadcastUploaded={(newB: Broadcast) => setBroadcasts((prev) => [...prev, newB])}
       />
-      {src !== "" ? <MusicControls audioSrc={src} title={metadata.broadcast_recording} header={metadata.radio_station} duration={metadata.duration} /> : null}
+      {src !== "" ? (
+        <MusicControls
+          audioSrc={src}
+          title={metadata.broadcast_recording}
+          header={metadata.radio_station}
+          duration={metadata.duration}
+          curDurationProp={curDuration}
+          setCurDuration={setCurDuration}
+        />
+      ) : null}
     </main>
   );
 }
