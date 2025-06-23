@@ -65,7 +65,7 @@ export function getRandomOrangeHex(): string {
   const saturation = Math.floor(80 + Math.random() * 20);
   
   // Random lightness from 40% (dark orange) to 80% (light orange)
-  const lightness = Math.floor(40 + Math.random() * 40);
+  const lightness = Math.floor(50 + Math.random() * 40);
 
   // Convert HSL to hex
   return hslToHex(hue, saturation, lightness);

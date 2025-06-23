@@ -3,6 +3,7 @@ import AdMasters from "@views/AdMasters.js";
 import Broadcasts from "@views/Broadcasts";
 import Login from "@views/Login";
 import Parent from "@layouts/Parent";
+import "/src/App.css"
 
 export default function App() {
   return (

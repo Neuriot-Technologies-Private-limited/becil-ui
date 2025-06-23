@@ -1,6 +1,7 @@
 import { formatSecondsToHHMMSS } from "@utils/utils";
 import { useEffect, useRef, useState } from "react";
 import { FaPlay, FaPause } from "react-icons/fa";
+import { FaXmark } from "react-icons/fa6";
 import { MdFastRewind, MdFastForward } from "react-icons/md";
 
 type MusicPlayerProps = {
@@ -10,9 +11,11 @@ type MusicPlayerProps = {
   duration: number;
   curDurationProp: {duration: number, source: string};
   setCurDuration: (arg0: {duration: number, source: string}) => void;
+  setAudioSrc: (arg0: string) => void;
+  setPlayingAudioId: (arg0: number) => void;
 };
 
-export default function MusicControls({ audioSrc, header, title, duration, curDurationProp, setCurDuration }: MusicPlayerProps) {
+export default function MusicControls({ audioSrc, setAudioSrc, setPlayingAudioId, header, title, duration, curDurationProp, setCurDuration }: MusicPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -70,8 +73,15 @@ export default function MusicControls({ audioSrc, header, title, duration, curDu
     audio.currentTime = newTime;
   };
 
+  function handleClose(){
+    setAudioSrc("")
+    setPlayingAudioId(-1);
+    setCurrentTime(0)
+    setCurDuration({duration: 0, source: 'controls'})
+  }
+
   return (
-    <div className="fixed bottom-3 left-1/2 -translate-x-[calc(50%-12rem)] w-[500px] shadow-md bg-neutral-700 text-white p-4 flex items-center justify-between z-50 rounded-2xl">
+    <div className="w-[500px] bg-neutral-600 p-4 flex items-center justify-between rounded-2xl fixed bottom-3 left-1/2 -translate-x-[calc(50%-12rem)] z-50 text-white">
       <div className="flex items-center gap-4 w-full">
         {/* Seek buttons */}
         <div className="flex items-center gap-2">
@@ -106,6 +116,9 @@ export default function MusicControls({ audioSrc, header, title, duration, curDu
         </div>
       </div>
       <audio ref={audioRef} src={audioSrc} onEnded={() => setIsPlaying(false)} />
+      <button className="absolute right-2 top-2 bg-neutral-700 hover:bg-neutral-500 text-neutral-400 hover:text-white size-6 rounded-full cursor-pointer flex justify-center items-center" onClick={handleClose}>
+        <FaXmark size={12}/>
+      </button>
     </div>
   );
 }

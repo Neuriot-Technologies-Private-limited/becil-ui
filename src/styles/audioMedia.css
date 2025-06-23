@@ -12,19 +12,16 @@
   }
 }
 
-/* Audiomediaai.css */
 .audioai-root {
   display: flex;
-  background: #232323;
   min-height: 100vh;
-  font-family: "Segoe UI", "Roboto", "Open Sans", "Helvetica Neue", sans-serif;
+  background-color: var(--bg-color);
 }
 
 .audioai-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #232323;
 }
 
 .audioai-header {
@@ -125,5 +122,27 @@
 
 .music-bg{
   /* background-color: #ddedda; */
-  background: linear-gradient(to right, #ddedda, transparent)
+  background: linear-gradient(to right, #705131, transparent);
+}
+
+.blurred-background {
+  background-color: rgba(0, 0, 0, 0.2); /* semi-transparent white */
+  color: #333333;
+  backdrop-filter: blur(10px);               /* blur the background behind */
+  -webkit-backdrop-filter: blur(10px);       /* for Safari support */
+  border-radius: 12px;                        /* optional: rounded corners */
+  padding: 1rem;
+}
+
+.nav-gradient{
+  background: linear-gradient(to right, #343434, black);
+}
+
+.scroll-table::-webkit-scrollbar{
+  display: hidden;
+}
+
+.scroll-table{
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

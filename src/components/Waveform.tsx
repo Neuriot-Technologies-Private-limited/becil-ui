@@ -81,7 +81,7 @@ export default function Waveform({ duration, amplitudes, regionProps, curDuratio
     const colorMap: Record<string | number, string> = {};
     for (const r of newRegions) {
       if (r.ad_id === -1) {
-        colorMap[r.ad_id] = "#e5e7eb";
+        colorMap[r.ad_id] = "#222222";
       } else {
         colorMap[r.ad_id] = getRandomOrangeHex();
       }
@@ -96,7 +96,7 @@ export default function Waveform({ duration, amplitudes, regionProps, curDuratio
   return (
     <div className="p-4 rounded-lg">
       <div className="flex items-center relative">
-        <div className={"bg-[#00000022] border-r-2 border-black absolute h-full left-0 w-12 pointer-events-none z-20 " + (regionProps.broadcast_id !== playingBroadcastId ? "hidden" : "")} style={{width: `${barWidth * curDuration.duration / secondsPerBar}px`}}></div>
+        <div className={"bg-[#FFFFFF22] border-r-2 border-white absolute h-full left-0 w-12 pointer-events-none z-20 " + (regionProps.broadcast_id !== playingBroadcastId ? "hidden" : "")} style={{width: `${barWidth * curDuration.duration / secondsPerBar}px`}}></div>
         {amplitudes.map((amp, index) => {
           const region = getRegionForIndex(index);
           const height = Math.max(amp * barHeight, 15); // minimum height for visibility
@@ -105,7 +105,7 @@ export default function Waveform({ duration, amplitudes, regionProps, curDuratio
           return (
             <div
               key={index}
-              className={"h-full flex items-center relative " + (region.ad_id !== -1 ? "bg-orange-100" : "bg-gray-100")}
+              className={"h-full flex items-center relative " + (region.ad_id !== -1 ? "" : "bg-neutral-200")}
               style={{ height: `${barHeight * 1.2}px`, width: `${barWidth}px` }}
               data-tooltip-id={tooltipId}
               data-tooltip-content={

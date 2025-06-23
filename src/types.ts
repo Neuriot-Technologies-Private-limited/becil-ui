@@ -33,3 +33,8 @@ export interface AdDetectionResult {
   processing_status: string;
   total_matches_found: number;
 }
+
+export interface CurDurationType{
+  duration: number;
+  source: "controls" | "waveform";
+}
