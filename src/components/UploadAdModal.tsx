@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import '@styles/UploadAdModal.css'; // CSS for modal styling
-import { FaXmark } from 'react-icons/fa6';
-import { getLastSegment } from '@utils/utils';
+import { useState, useRef } from "react";
+import { FaMusic, FaXmark } from "react-icons/fa6";
+import { getLastSegment } from "@utils/utils";
 
 const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
   const apiUrl = import.meta.env["VITE_API_URL"];
-  const [brand, setBrand] = useState('');
-  const [advertisement, setAdvertisement] = useState('');
-  const [status, setStatus] = useState('Active');
-  const [file, setFile] = useState(null);
+  const [brand, setBrand] = useState("");
+  const [advertisement, setAdvertisement] = useState("");
+  const [status, setStatus] = useState("Active");
+  const [file, setFile] = useState<File>();
   const [isUploading, setIsUploading] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,13 +34,12 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
 
       const duration = await getDuration(file);
 
-
       // Step 1: Upload the file to S3 via FastAPI
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       const fileRes = await fetch(`${apiUrl}/ads/upload-audio`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
@@ -53,8 +53,8 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
 
       // Step 2: Submit ad metadata to FastAPI
       const adRes = await fetch(`${apiUrl}/ads`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brand,
           advertisement,
@@ -63,7 +63,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
           status,
         }),
       });
-      console.log(getLastSegment(url))
+      console.log(getLastSegment(url));
 
       if (!adRes.ok) {
         const errorText = await adRes.text();
@@ -79,62 +79,69 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
       alert("Upload failed. See console for details.");
     } finally {
       setIsUploading(false);
-      setBrand("")
-      setAdvertisement("")
-      setStatus("Active")
+      setBrand("");
+      setAdvertisement("");
+      setStatus("Active");
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <button className="close-btn" onClick={onClose}>
+    <div className="fixed inset-0 bg-[#000000AA] flex items-center justify-center z-[100]" onClick={onClose}>
+      <div className="bg-black text-white px-8 py-5 rounded-lg max-w-md w-full relative modal-shadow" onClick={(e) => e.stopPropagation()}>
+        <button className="absolute top-4 right-4 cursor-pointer" onClick={onClose}>
           <FaXmark />
         </button>
-        <h2>Upload New Ad</h2>
-        <form onSubmit={handleSubmit}>
-          <label>
-            Brand:
+        <h2 className="text-xl font-bold">Upload New Ad</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 !mt-4">
+          <div className="flex flex-col gap-2">
+            <label>Brand</label>
             <input
               type="text"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
               required
+              className="rounded-md h-10 bg-neutral-800 focus:outline-none px-4"
             />
-          </label>
+          </div>
 
-    <label>
-            Advertisement:
+          <div className="flex flex-col gap-2">
+            <label>Advertisement</label>
             <input
               type="text"
               value={advertisement}
               onChange={(e) => setAdvertisement(e.target.value)}
               required
+              className="rounded-md h-10 bg-neutral-800 focus:outline-none px-4"
             />
-          </label>
-
-
-          <label>
-            Status:
-            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label>Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-md h-10 bg-neutral-800 focus:outline-none px-3">
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
-          </label>
+          </div>
 
-          <label>
-            Audio File:
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setFile(e.target.files[0])}
-              required
-            />
-          </label>
-
-          <button type="submit" disabled={isUploading}>
+          <div className="flex flex-col gap-2">
+            <label>Audio File</label>
+            <input ref={fileInputRef} className="hidden" type="file" accept="audio/*" onChange={(e) => setFile(e.target.files![0])} required />
+            <button
+              type="button"
+              className="rounded-md h-10 !mb-1 bg-neutral-800 focus:outline-none self-start px-4"
+              onClick={() => fileInputRef.current!.click()}
+            >
+              Choose File
+            </button>
+            {file && (
+              <div className="flex gap-4 overflow-hidden items-center">
+                <FaMusic size={14} className="shrink-0 text-neutral-600" />
+                <p className="text-sm truncate grow break-all line-clamp-1">{file.name}</p>
+              </div>
+            )}
+          </div>
+          <button type="submit" disabled={isUploading} className="h-10 bg-orange-400 text-black rounded-md self-end px-4 flex items-center justify-center disabled:bg-orange-200 disabled:cursor-default cursor-pointer">
             {isUploading ? "Uploading..." : "Submit"}
           </button>
         </form>

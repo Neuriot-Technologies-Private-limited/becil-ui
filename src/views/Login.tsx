@@ -13,6 +13,8 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
+    navigate("/admasters");
+    return;
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
@@ -41,16 +43,14 @@ export default function Login() {
   };
 
   return (
-    <main className="login">
-
-      {/*
+    <main className="login relative">
       <div className="login-left">
         <img src="/airobot.jpg" alt="AI assistant" className="login-robot" />
       </div>
-      <div className="login-right">
-        <img src="/findoutAi.jpg" alt="Findout Logo" className="login-logo"/>
+      <div className="absolute top-1/2 left-1/2 -translate-y-1/2 w-[300px]">
+        <img src="/findoutAi.jpg" alt="Findout Logo" className="object-fit"/>
         <h1 className="login-header">User Login</h1>
-        <form className="login-form">
+        <form className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
           <label htmlFor="" className="text-sm text-neutral-400">Username or Email</label>
           <input type="text" className="login-input" value={user} onChange={(e) => setUser(e.target.value)} placeholder="Enter your UserID" />
@@ -59,14 +59,15 @@ export default function Login() {
           <label htmlFor="" className="text-sm text-neutral-400">Password</label>
           <input type="password" className="login-input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" />
           </div>
-          <button type="button" className="login-button" onClick={handleLogin} disabled={loading}>
+          <button type="button" className="p-4 rounded-md text-black bg-orange-300 font-bold !mt-4 cursor-pointer hover:bg-orange-400" onClick={handleLogin} disabled={loading}>
             {loading ? "Loading..." : "Login"}
           </button>
           {errorMessage && <div className="error-message">{errorMessage}</div>}
         </form>
       </div>
-      */}
+      {/*
       <Bubbles />
+      */}
     </main>
   );
 }

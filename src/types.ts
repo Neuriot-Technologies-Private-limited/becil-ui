@@ -1,4 +1,5 @@
 export interface Broadcast{
+  id: number;
   radio_station: string;
   broadcast_recording: string;
   duration: number;
@@ -8,6 +9,7 @@ export interface Broadcast{
 }
 
 export interface AdMaster{
+  id: number;
   brand: string;
   advertisement: string;
   upload_date: Date;
@@ -30,6 +32,7 @@ export interface AdDetectionResult {
   mfcc_correlation: number;
   overlap_duration: number;
   detection_timestamp: string;
+  clip_type: string;
   processing_status: string;
   total_matches_found: number;
 }

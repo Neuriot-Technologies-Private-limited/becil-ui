@@ -1,4 +1,6 @@
 import UploadAdModal from "@components/UploadAdModal";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import "@styles/audioMedia.css";
 import { formatDuration } from "@utils/utils";
 import axios from "axios";
@@ -8,7 +10,7 @@ import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
 import MusicControls from "@components/MusicControls";
 import { FaCheck, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
-import type { AdMaster, CurDurationType } from "src/types";
+import type { AdMaster, CurDurationType } from "@/types";
 
 export default function AdMasters() {
   const [modal, setModal] = useState(false);
@@ -115,31 +117,36 @@ export default function AdMasters() {
     }
   }
 
+  function Header({ children }: { children: any }) {
+    return { children };
+  }
+
   return (
-    <>
-      <main className="audioai-main">
-        <header className="flex px-12 items-end justify-between h-20">
-          <div className="uppercase font-light text-3xl text-white tracking-widest">Ad Masters</div>
-          <div className="audioai-header-user">
-            <img src="/man.jpg" alt="User" className="w-8 h-8 overflow-hidden rounded-full" />
-            <span className="text-neutral-400">Rohit</span>
+    <main className="audioai-main">
+      <header className="flex px-12 items-end justify-between h-20">
+        <div className="uppercase font-light text-3xl text-white tracking-widest">Ad Masters</div>
+        <div className="audioai-header-user">
+          <img src="/man.jpg" alt="User" className="w-8 h-8 overflow-hidden rounded-full" />
+          <span className="text-neutral-400">Rohit</span>
+        </div>
+      </header>
+
+      <div className="flex p-12 pb-30 flex-col">
+        <div className="flex justify-between !mb-8">
+          <div className="flex items-center gap-4 w-[300px]">
+            <FaSearch className="text-neutral-400" size={16} />
+            <input type="text" placeholder="Search Ads" className="h-10 bg-neutral-700 grow text-white px-4 rounded-md focus:outline-none" />
           </div>
-        </header>
-        <div className="flex p-12 pb-30 flex-col">
-          <div className="flex justify-between !mb-8">
-            <div className="flex items-center gap-4 w-[300px]">
-              <FaSearch className="text-neutral-400" size={16} />
-              <input type="text" placeholder="Search Ads" className="h-10 bg-neutral-700 grow text-white px-4 rounded-md focus:outline-none" />
-            </div>
-            <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4" onClick={() => setModal(true)}>
-              <FaPlus />
-              New Ad Master
-            </button>
-          </div>
-          <div className="p-4 bg-neutral-800 rounded-xl">
-            <h2 className="text-xl font-bold text-white !mb-4 relative">All Ad Masters</h2>
-            <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table bg-[var(--bg-color)] sticky top-0">
-              <div className="rounded-xl overflow-hidden border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold z-10">
+          <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4 font-semibold" onClick={() => setModal(true)}>
+            <FaPlus />
+            New Ad Master
+          </button>
+        </div>
+        <div className="p-4 bg-neutral-800 rounded-xl">
+          <h2 className="text-xl font-bold text-white !mb-4 relative">All Ad Masters</h2>
+          {ads.length ? (
+            <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table">
+              <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
                 <div className="w-[15%] pl-4">Brand</div>
                 <div className="w-[35%]">Advertisement</div>
                 <div className="w-[15%] text-center">Duration</div>
@@ -196,23 +203,27 @@ export default function AdMasters() {
                 ))}
               </div>
             </div>
-          </div>
-          <div className="flex gap-2 hidden">
-            <span className="audioai-pagination-arrow">
-              <FaAngleDoubleLeft />
-            </span>
-            <span className="audioai-pagination-arrow">
-              <FaAngleLeft />
-            </span>
-            <span className="audioai-pagination-arrow">
-              <FaAngleRight />
-            </span>
-            <span className="audioai-pagination-arrow">
-              <FaAngleDoubleRight />
-            </span>
-          </div>
+          ) : (
+            <SkeletonTheme baseColor={"#555555"} highlightColor={"#CCCCCC"}>
+              <Skeleton count={10} height={32} containerClassName="gap-0.5 flex flex-col" />
+            </SkeletonTheme>
+          )}
         </div>
-      </main>
+        <div className="flex gap-2 hidden">
+          <span className="audioai-pagination-arrow">
+            <FaAngleDoubleLeft />
+          </span>
+          <span className="audioai-pagination-arrow">
+            <FaAngleLeft />
+          </span>
+          <span className="audioai-pagination-arrow">
+            <FaAngleRight />
+          </span>
+          <span className="audioai-pagination-arrow">
+            <FaAngleDoubleRight />
+          </span>
+        </div>
+      </div>
       <UploadAdModal isOpen={modal} onClose={() => setModal(false)} onAdUploaded={(newAd: AdMaster) => setAds([...ads, newAd])} />
       {src !== "" ? (
         <MusicControls
@@ -226,6 +237,6 @@ export default function AdMasters() {
           setPlayingAudioId={setPlayingAdId}
         />
       ) : null}
-    </>
+    </main>
   );
 }

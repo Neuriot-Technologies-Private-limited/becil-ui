@@ -30,6 +30,7 @@ export const emptyAdSlot: AdDetectionResult = {
   ad_id: -1,
   broadcast_id: 0,
   brand: "Empty Slot",
+  clip_type: "empty",
   description: "",
   start_time_seconds: 0,
   end_time_seconds: 0,

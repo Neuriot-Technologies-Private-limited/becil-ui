@@ -42,7 +42,7 @@ export default function Parent() {
 
   return (
     <div className="audioai-root flex">
-      <aside className={`text-white flex flex-col shrink-0 bg-black transition-all duration-300 ${collapsed ? "w-32" : "w-68"}`}>
+      <aside className={`text-neutral-300 flex flex-col shrink-0 bg-black transition-all duration-300 ${collapsed ? "w-32" : "w-68"}`}>
         {/* Logo and Header */}
         <div className={`relative left-0 flex flex-col gap-2 pt-12 pb-6 ${getBorderRadiusClass(0)} ${collapsed ? "items-center" : "items-start left-8"}`}>
           <img

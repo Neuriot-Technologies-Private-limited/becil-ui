@@ -10,7 +10,7 @@ type MusicPlayerProps = {
   title: string;
   duration: number;
   curDurationProp: {duration: number, source: string};
-  setCurDuration: (arg0: {duration: number, source: string}) => void;
+  setCurDuration: (arg0: {duration: number, source: "controls" | "waveform"}) => void;
   setAudioSrc: (arg0: string) => void;
   setPlayingAudioId: (arg0: number) => void;
 };
@@ -30,6 +30,7 @@ export default function MusicControls({ audioSrc, setAudioSrc, setPlayingAudioId
     }
 
     const updateProgress = () => {
+      console.log('updateProgress')
       const percent = (audio.currentTime / audio.duration) * 100;
       setProgress(isNaN(percent) ? 0 : percent);
       setCurDuration({duration: audio.currentTime, source: "controls"});
@@ -43,6 +44,7 @@ export default function MusicControls({ audioSrc, setAudioSrc, setPlayingAudioId
   useEffect(() => {
     if(audioRef.current && curDurationProp.source === "waveform"){
       audioRef.current.currentTime = curDurationProp.duration;
+      console.log('this')
     }
   }, [curDurationProp, audioRef])
 
