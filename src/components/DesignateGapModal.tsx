@@ -36,7 +36,6 @@ export const DesignateGapModal = ({ isOpen, onClose, region, src, broadcastId }:
   const handleSubmit = async () => {
     setIsUploading(true);
     try {
-      // throw Error("haha");
       const res = await fetch(`${apiUrl}/broadcasts/${broadcastId}/designate_clip`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,8 +51,6 @@ export const DesignateGapModal = ({ isOpen, onClose, region, src, broadcastId }:
       if (!res.ok) {
         const errorText = await res.text();
         console.error("Metadata upload failed:", errorText);
-      } else{
-        console.log("success vetri")
       }
     } catch (err) {
       console.error(err);
@@ -70,10 +67,7 @@ export const DesignateGapModal = ({ isOpen, onClose, region, src, broadcastId }:
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.currentTime = startTime;
-
     const updateProgress = () => {
-      console.log("updateProgress fired");
       if (audio.currentTime > endTime) {
         setIsPlaying(false);
         audio.pause();
@@ -91,7 +85,6 @@ export const DesignateGapModal = ({ isOpen, onClose, region, src, broadcastId }:
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    console.log("onNewSrc");
 
     audio.currentTime = startTime;
   }, [src]);

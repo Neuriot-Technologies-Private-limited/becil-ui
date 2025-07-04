@@ -31,7 +31,7 @@ export default function Parent() {
   ];
 
   const handleLink = (path: string) => {
-    if (["/admasters", "/broadcasts", "/login"].includes(path)) navigate(path);
+    if (["/admasters", "/broadcasts", "/login", "/songmasters"].includes(path)) navigate(path);
   };
 
   const getBorderRadiusClass = (no: number) => {

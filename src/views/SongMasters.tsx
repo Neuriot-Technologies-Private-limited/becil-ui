@@ -1,24 +1,24 @@
-import UploadAdModal from "@components/UploadAdModal";
+import UploadSongModal from "@/components/UploadSongModal";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import "@styles/audioMedia.css";
 import { formatDuration } from "@utils/utils";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCloudDownloadAlt, FaMusic, FaSearch, FaTimes } from "react-icons/fa";
+import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCloudDownloadAlt, FaMusic, FaSearch, } from "react-icons/fa";
 import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
 import MusicControls from "@components/MusicControls";
 import { FaCheck, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
-import type { AdMaster, CurDurationType } from "@/types";
+import type { CurDurationType, SongMaster } from "@/types";
 
-export default function AdMasters() {
+export default function SongMasters() {
   const [modal, setModal] = useState(false);
-  const [playingAdId, setPlayingAdId] = useState(-1);
+  const [playingSongId, setPlayingSongId] = useState(-1);
   const [curDuration, setCurDuration] = useState<CurDurationType>({ duration: 0, source: "controls" });
   const [src, setSrc] = useState("");
-  const [metadata, setMetadata] = useState<AdMaster>();
-  const [ads, setAds] = useState<AdMaster[]>([]);
+  const [metadata, setMetadata] = useState<SongMaster>();
+  const [songs, setSongs] = useState<SongMaster[]>([]);
   const [buttonLoading, setButtonLoading] = useState({
     id: -1,
     type: "Music",
@@ -29,32 +29,32 @@ export default function AdMasters() {
 
   useEffect(() => {
     setActiveLink(1);
-    const fetchAds = async () => {
+    const fetchSongs = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/ads`);
-        setAds(response.data);
+        const response = await axios.get(`${apiUrl}/songs`);
+        setSongs(response.data);
       } catch (error) {
         console.error("Error fetching ads:", error);
       }
     };
 
-    fetchAds();
+    fetchSongs();
   }, []);
 
-  async function handleMusic(ad: AdMaster) {
+  async function handleMusic(song: SongMaster) {
     if (buttonLoading.id !== -1) {
       return;
     }
     try {
-      setButtonLoading({ id: ad.id, type: "Music" });
-      const res = await fetch(`${apiUrl}/audio/ads/${ad.filename}`);
+      setButtonLoading({ id: song.id, type: "Music" });
+      const res = await fetch(`${apiUrl}/audio/songs/${song.filename}`);
       if (!res.ok) throw new Error("Failed to fetch audio");
 
       const blob = await res.blob();
       const audioUrl = URL.createObjectURL(blob);
       setSrc(audioUrl);
-      setMetadata(ad);
-      setPlayingAdId(ad.id);
+      setMetadata(song);
+      setPlayingSongId(song.id);
     } catch (err) {
       console.error("Error fetching audio:", err);
     } finally {
@@ -62,13 +62,13 @@ export default function AdMasters() {
     }
   }
 
-  async function handleDownload(ad: AdMaster) {
+  async function handleDownload(song: SongMaster) {
     if (buttonLoading.id !== -1) {
       return;
     }
     try {
-      setButtonLoading({ id: ad.id, type: "Download" });
-      const res = await fetch(`${apiUrl}/audio/ads/${ad.filename}`);
+      setButtonLoading({ id: song.id, type: "Download" });
+      const res = await fetch(`${apiUrl}/audio/songs/${song.filename}`);
       if (!res.ok) throw new Error("Failed to fetch audio");
 
       const blob = await res.blob();
@@ -76,7 +76,7 @@ export default function AdMasters() {
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = ad.filename; // You can customize the download name here
+      a.download = song.filename; // You can customize the download name here
       a.click();
 
       URL.revokeObjectURL(url); // Clean up the object URL
@@ -91,7 +91,7 @@ export default function AdMasters() {
     const newStatus = status === "Active" ? "Inactive" : "Active";
 
     try {
-      const res = await fetch(`${apiUrl}/ads/status`, {
+      const res = await fetch(`${apiUrl}/songs/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -108,9 +108,9 @@ export default function AdMasters() {
         throw new Error("Status update failed");
       }
 
-      const updatedAd = await res.json();
-      setAds((prev: AdMaster[]) => prev.map((item: AdMaster) => (item.id === updatedAd.id ? updatedAd : item)));
-      console.log("Status updated successfully:", updatedAd);
+      const updatedSong = await res.json();
+      setSongs((prev: SongMaster[]) => prev.map((item) => (item.id === updatedSong.id ? updatedSong : item)));
+      console.log("Status updated successfully:", updatedSong);
     } catch (err) {
       console.error("Error in statusUpdate:", err);
       throw err;
@@ -120,7 +120,7 @@ export default function AdMasters() {
   return (
     <main className="audioai-main">
       <header className="flex px-12 items-end justify-between h-20">
-        <div className="uppercase font-light text-3xl text-white tracking-widest">Ad Masters</div>
+        <div className="uppercase font-light text-3xl text-white tracking-widest">Song Masters</div>
         <div className="audioai-header-user">
           <img src="/man.jpg" alt="User" className="w-8 h-8 overflow-hidden rounded-full" />
           <span className="text-neutral-400">Rohit</span>
@@ -131,30 +131,30 @@ export default function AdMasters() {
         <div className="flex justify-between !mb-8">
           <div className="flex items-center gap-4 w-[300px]">
             <FaSearch className="text-neutral-400" size={16} />
-            <input type="text" placeholder="Search Ads" className="h-10 bg-neutral-700 grow text-white px-4 rounded-md focus:outline-none" />
+            <input type="text" placeholder="Search songs" className="h-10 bg-neutral-700 grow text-white px-4 rounded-md focus:outline-none" />
           </div>
           <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4 font-semibold" onClick={() => setModal(true)}>
             <FaPlus />
-            New Ad Master
+            New Song Master
           </button>
         </div>
         <div className="p-4 bg-neutral-800 rounded-xl">
-          <h2 className="text-xl font-bold text-white !mb-4 relative">All Ad Masters</h2>
-          {ads.length ? (
+          <h2 className="text-xl font-bold text-white !mb-4 relative">All Song Masters</h2>
+          {songs.length ? (
             <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table">
               <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
-                <div className="w-[15%] pl-4">Brand</div>
-                <div className="w-[35%]">Advertisement</div>
+                <div className="w-[15%] pl-4">Artists</div>
+                <div className="w-[35%]">Name</div>
                 <div className="w-[15%] text-center">Duration</div>
                 <div className="w-[10%] text-center">Upload Date</div>
                 <div className="w-[15%] text-center">Status</div>
                 <div className="w-[10%]"></div>
               </div>
               <div className="flex flex-col text-white">
-                {ads.map((row, idx) => (
-                  <div key={idx} className={"flex items-center py-4 " + (playingAdId === row.id ? "music-bg" : "odd:bg-neutral-800 bg-neutral-900")}>
-                    <div className="w-[15%] pl-4">{row.brand}</div>
-                    <div className="w-[35%]">{row.advertisement}</div>
+                {songs.map((row, idx) => (
+                  <div key={idx} className={"flex items-center py-4 " + (playingSongId === row.id ? "music-bg" : "odd:bg-neutral-800 bg-neutral-900")}>
+                    <div className="w-[15%] pl-4">{row.artist}</div>
+                    <div className="w-[35%]">{row.name}</div>
                     <div className="w-[15%] text-center">{formatDuration(row.duration)}</div>
                     <div className="w-[10%] text-center">{row.upload_date.toString().slice(0, 10)}</div>
                     <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-600" : " text-red-500")}>{row.status}</div>
@@ -164,11 +164,11 @@ export default function AdMasters() {
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer shrink-0 disabled:cursor-default"
                         title="Play"
                         onClick={() => handleMusic(row)}
-                        disabled={playingAdId === row.id}
+                        disabled={playingSongId === row.id}
                       >
                         {buttonLoading.id === row.id && buttonLoading.type === "Music" ? (
                           <PuffLoader color="white" size={15} />
-                        ) : playingAdId === row.id ? (
+                        ) : playingSongId === row.id ? (
                           <FaMusic />
                         ) : (
                           <FaPlay />
@@ -220,17 +220,17 @@ export default function AdMasters() {
           </span>
         </div>
       </div>
-      <UploadAdModal isOpen={modal} onClose={() => setModal(false)} onAdUploaded={(newAd: AdMaster) => setAds([...ads, newAd])} />
+      <UploadSongModal isOpen={modal} onClose={() => setModal(false)} onSongUploaded={(newSong: SongMaster) => setSongs([...songs, newSong])} />
       {src !== "" ? (
         <MusicControls
           audioSrc={src}
-          title={metadata.advertisement}
-          header={metadata.brand}
+          title={metadata.name}
+          header={metadata.artist}
           duration={metadata.duration}
           curDurationProp={curDuration}
           setCurDuration={setCurDuration}
           setAudioSrc={setSrc}
-          setPlayingAudioId={setPlayingAdId}
+          setPlayingAudioId={setPlayingSongId}
         />
       ) : null}
     </main>

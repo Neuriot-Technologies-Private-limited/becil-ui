@@ -41,3 +41,13 @@ export interface CurDurationType{
   duration: number;
   source: "controls" | "waveform";
 }
+
+export interface SongMaster{
+  id: number;
+  artist: string;
+  name: string;
+  upload_date: Date;
+  duration: number;
+  filename: string;
+  status: string;
+}

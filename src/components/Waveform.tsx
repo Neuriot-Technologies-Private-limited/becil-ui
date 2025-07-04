@@ -104,6 +104,7 @@ export default function Waveform({ duration, amplitudes, regionProps, curDuratio
     setRegions(newRegions);
     const colorMap: Record<string | number, string> = {};
     for (const r of newRegions) {
+      console.log(r.clip_type)
       if (r.clip_type === "empty") {
         colorMap[`${r.ad_id}-${r.clip_type}`] = "#222222";
       } else if (r.clip_type === "song") {
@@ -132,15 +133,16 @@ export default function Waveform({ duration, amplitudes, regionProps, curDuratio
   return (
     <div className="p-4 rounded-lg">
       <div className="flex items-center relative">
-        <div
-          className={
-            "bg-[#FFFFFF22] border-r-2 border-white absolute h-full left-0 w-12 pointer-events-none z-20 " +
-            (regionProps.broadcast_id !== playingBroadcastId ? "hidden" : "")
-          }
-          style={{ width: `${(barWidth * curDuration.duration) / secondsPerBar}px` }}
-        />
-        <div className="flex flex-col gap-4 relative">
-          <div className="flex">
+        <div className="flex flex-col gap-4">
+          <div className="flex relative">
+            <div
+              className={
+                "bg-[#FFFFFF22] border-r-2 border-white absolute h-full left-0 w-12 pointer-events-none z-20 " +
+                (regionProps.broadcast_id !== playingBroadcastId ? "hidden" : "")
+              }
+              style={{ width: `${(barWidth * curDuration.duration) / secondsPerBar}px` }}
+            />
+
             {amplitudes.map((amp, index) => {
               const region = getRegionForIndex(index);
               const height = Math.max(amp * barHeight, 15);
