@@ -28,7 +28,7 @@ export default function SongMasters() {
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
 
   useEffect(() => {
-    setActiveLink(1);
+    setActiveLink(2);
     const fetchSongs = async () => {
       try {
         const response = await axios.get(`${apiUrl}/songs`);

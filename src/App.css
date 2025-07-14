@@ -47,3 +47,7 @@
   /* box-shadow: 0px 0px 12px 1px #ab713c inset; */
   border: 1px solid #777777;
 }
+
+.chevron-brother + svg{
+  display: none;
+}

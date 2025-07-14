@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
 import { getLastSegment } from "@utils/utils";
 
@@ -9,6 +9,27 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
   const [file, setFile] = useState<File>();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const stationTextareaRef = useRef(null)
+  const recordingTextareaRef = useRef(null)
+
+  const onTextareaResize = (key: "station" | "recording") => {
+    let el: HTMLTextAreaElement;
+    if(key == "station"){
+      el = stationTextareaRef.current;
+    } else {
+      el = recordingTextareaRef.current;
+    }
+    if(!el) return;
+    const lineHeight = parseInt(getComputedStyle(el).lineHeight || "15", 10);
+    const maxLines = 5;
+    const maxHeight = lineHeight * maxLines;
+
+    el.style.height = "auto";
+    const newHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = `${newHeight}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -98,23 +119,29 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 !mt-4">
           <div className="flex flex-col gap-2">
             <label>Radio Station</label>
-            <input
-              type="text"
+            <textarea
               value={radioStation}
-              onChange={(e) => setRadioStation(e.target.value)}
+              onChange={(e) => {
+                setRadioStation(e.target.value)
+                onTextareaResize("station")
+              }}
+              ref={stationTextareaRef}
               required
-              className="rounded-md h-10 bg-neutral-800 focus:outline-none px-4"
+              className="pt-2 rounded-md resize-none bg-neutral-800 focus:outline-none px-4"
             />
           </div>
 
           <div className="flex flex-col gap-2">
             <label>Recording name</label>
-            <input
-              type="text"
+            <textarea
               value={recordingName}
-              onChange={(e) => setRecordingName(e.target.value)}
+              onChange={(e) => {
+                setRecordingName(e.target.value)
+                onTextareaResize("recording")
+              }}
               required
-              className="rounded-md h-10 bg-neutral-800 focus:outline-none px-4"
+              ref={recordingTextareaRef}
+              className="pt-2 rounded-md resize-none bg-neutral-800 focus:outline-none px-4"
             />
           </div>
 

@@ -4,13 +4,29 @@ import "react-loading-skeleton/dist/skeleton.css";
 import "@styles/audioMedia.css";
 import { formatDuration } from "@utils/utils";
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCloudDownloadAlt, FaMusic, FaSearch, FaTimes } from "react-icons/fa";
+import { useEffect, useMemo, useState } from "react";
+import {
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight,
+  FaAngleLeft,
+  FaAngleRight,
+  FaChevronDown,
+  FaChevronUp,
+  FaCloudDownloadAlt,
+  FaFilter,
+  FaMusic,
+  FaSearch,
+  FaTimes,
+} from "react-icons/fa";
 import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
 import MusicControls from "@components/MusicControls";
 import { FaCheck, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
 import type { AdMaster, CurDurationType } from "@/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
+
+type SortKey = keyof AdMaster;
+type AdStatus = "Active" | "Inactive";
 
 export default function AdMasters() {
   const [modal, setModal] = useState(false);
@@ -23,6 +39,38 @@ export default function AdMasters() {
     id: -1,
     type: "Music",
   });
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "ascending" | "descending" }>({
+    key: "upload_date",
+    direction: "descending",
+  });
+  const [statusFilter, setStatusFilter] = useState<AdStatus | "all">("all");
+
+  const filteredAndSortedAds = useMemo(() => {
+    let sortableItems = [...ads];
+    if (statusFilter && statusFilter !== "all") {
+      sortableItems = sortableItems.filter((ad) => ad.status === statusFilter);
+    }
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [ads, sortConfig, statusFilter]);
+
+  const requestSort = (key: SortKey) => {
+    let direction: "ascending" | "descending" = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
 
   const apiUrl = import.meta.env["VITE_API_URL"];
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
@@ -117,6 +165,15 @@ export default function AdMasters() {
     }
   }
 
+  const SortableHeader = ({ sortKey, children, className }: { sortKey: SortKey; children: React.ReactNode; className?: string }) => (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <button type="button" onClick={() => requestSort(sortKey)} className="flex items-center gap-2">
+        {children}
+        {sortConfig.key === sortKey && (sortConfig.direction === "ascending" ? <FaChevronUp /> : <FaChevronDown />)}
+      </button>
+    </div>
+  );
+
   return (
     <main className="audioai-main">
       <header className="flex px-12 items-end justify-between h-20">
@@ -139,25 +196,53 @@ export default function AdMasters() {
           </button>
         </div>
         <div className="p-4 bg-neutral-800 rounded-xl">
-          <h2 className="text-xl font-bold text-white !mb-4 relative">All Ad Masters</h2>
+          <div className="flex justify-between items-center !mb-4">
+            <h2 className="text-xl font-bold text-white">All Ad Masters</h2>
+            <p className="text-neutral-400 text-sm">
+              {filteredAndSortedAds.length} result{filteredAndSortedAds.length === 1 ? "" : "s"}
+            </p>
+          </div>
           {ads.length ? (
             <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table">
               <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
-                <div className="w-[15%] pl-4">Brand</div>
-                <div className="w-[35%]">Advertisement</div>
-                <div className="w-[15%] text-center">Duration</div>
-                <div className="w-[10%] text-center">Upload Date</div>
-                <div className="w-[15%] text-center">Status</div>
+                <div className="w-[15%] pl-4">
+                  <SortableHeader sortKey="brand">Brand</SortableHeader>
+                </div>
+                <div className="w-[35%]">
+                  <SortableHeader sortKey="advertisement">Advertisement</SortableHeader>
+                </div>
+                <div className="w-[15%]">
+                  <SortableHeader sortKey="duration" className="justify-center">
+                    Duration
+                  </SortableHeader>
+                </div>
+                <div className="w-[10%]">
+                  <SortableHeader sortKey="upload_date" className="justify-center">
+                    Upload Date
+                  </SortableHeader>
+                </div>
+                <div className="w-[15%] flex justify-center">
+                  <Select onValueChange={(value: AdStatus | "all") => setStatusFilter(value)} value={statusFilter}>
+                    <SelectTrigger className="w-fit bg-transparent border-none">
+                      <p className="chevron-brother">Status</p>
+                    </SelectTrigger>
+                    <SelectContent className="dark">
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="w-[10%]"></div>
               </div>
               <div className="flex flex-col text-white">
-                {ads.map((row, idx) => (
+                {filteredAndSortedAds.map((row, idx) => (
                   <div key={idx} className={"flex items-center py-4 " + (playingAdId === row.id ? "music-bg" : "odd:bg-neutral-800 bg-neutral-900")}>
                     <div className="w-[15%] pl-4">{row.brand}</div>
                     <div className="w-[35%]">{row.advertisement}</div>
                     <div className="w-[15%] text-center">{formatDuration(row.duration)}</div>
-                    <div className="w-[10%] text-center">{row.upload_date.toString().slice(0, 10)}</div>
-                    <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-600" : " text-red-500")}>{row.status}</div>
+                    <div className="w-[10%] text-center">{new Date(row.upload_date).toISOString().slice(0, 10)}</div>
+                    <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-300" : " text-red-300")}>{row.status}</div>
                     <div className="w-[10%] flex gap-2 justify-end pr-4">
                       <button
                         type="button"

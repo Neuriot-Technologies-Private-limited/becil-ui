@@ -10,7 +10,28 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
   const [file, setFile] = useState<File>();
   const [isUploading, setIsUploading] = useState(false);
 
+  const adTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const brandTextareaRef = useRef<HTMLTextAreaElement>(null)
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onTextareaResize = (key: "ad" | "brand") => {
+    let el: HTMLTextAreaElement;
+    if(key == "ad"){
+      el = adTextareaRef.current;
+    } else {
+      el = brandTextareaRef.current;
+    }
+    if(!el) return;
+    const lineHeight = parseInt(getComputedStyle(el).lineHeight || "15", 10);
+    const maxLines = 5;
+    const maxHeight = lineHeight * maxLines;
+
+    el.style.height = "auto";
+    const newHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = `${newHeight}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,23 +118,29 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 !mt-4">
           <div className="flex flex-col gap-2">
             <label>Brand</label>
-            <input
-              type="text"
+            <textarea
               value={brand}
-              onChange={(e) => setBrand(e.target.value)}
+              onChange={(e) => {
+                setBrand(e.target.value)
+                onTextareaResize("brand")
+              }}
               required
-              className="rounded-md h-10 bg-neutral-800 focus:outline-none px-4"
+              ref={brandTextareaRef}
+              className="pt-2 resize-none rounded-md bg-neutral-800 focus:outline-none px-4"
             />
           </div>
 
           <div className="flex flex-col gap-2">
             <label>Advertisement</label>
-            <input
-              type="text"
+            <textarea
               value={advertisement}
-              onChange={(e) => setAdvertisement(e.target.value)}
+              onChange={(e) => {
+                setAdvertisement(e.target.value)
+                onTextareaResize("ad")
+              }}
               required
-              className="rounded-md h-10 bg-neutral-800 focus:outline-none px-4"
+              ref={adTextareaRef}
+              className="pt-2 resize-none rounded-md bg-neutral-800 focus:outline-none px-4"
             />
           </div>
           <div className="flex flex-col gap-2">

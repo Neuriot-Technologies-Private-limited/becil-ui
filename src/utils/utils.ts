@@ -39,7 +39,9 @@ function stringToSeed(str: string): number {
 }
 
 // Generate deterministic amplitudes
-export function generateAmplitudes(seedInput: string, count = 500): number[] {
+export function generateAmplitudes(seedInput: string, duration: number): number[] {
+  const pointsPerSecond = 100; // Higher density for better zoom resolution
+  const count = Math.floor(duration * pointsPerSecond);
   const seed = stringToSeed(seedInput);
   const rand = mulberry32(seed);
   return Array.from({ length: count }, () => rand() * 0.9 + 0.1);

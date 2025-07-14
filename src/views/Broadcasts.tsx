@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { FaPlay } from "react-icons/fa";
 import MusicControls from "@components/MusicControls";
 import { GiDiamonds } from "react-icons/gi";
 import UploadBroadcastModal from "@components/UploadBroadcastModal";
-import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCloudDownloadAlt, FaMusic, FaRegFileAlt, FaSearch } from "react-icons/fa";
+import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaChevronDown, FaChevronUp, FaCloudDownloadAlt, FaFilter, FaMusic, FaRegFileAlt, FaSearch } from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
 import Waveform from "@components/Waveform";
 import { formatDuration, formatSecondsToHHMMSS, generateAmplitudes } from "@utils/utils";
@@ -15,6 +15,10 @@ import { useOutletContext } from "react-router";
 import type { CurDurationType, AdDetectionResult, Broadcast } from "@/types";
 import { PuffLoader } from "react-spinners";
 import { FaPlus } from "react-icons/fa6";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
+
+type SortKey = keyof Broadcast;
+type BroadcastStatus = "Processed" | "Processing" | "Pending";
 
 export default function Broadcasts() {
   const apiUrl = import.meta.env["VITE_API_URL"];
@@ -32,6 +36,38 @@ export default function Broadcasts() {
     type: "Music",
   });
   const [disabledButtons, setDisabledButtons] = useState<number[]>([]);
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "ascending" | "descending" }>({
+    key: "broadcast_date",
+    direction: "descending",
+  });
+  const [statusFilter, setStatusFilter] = useState<BroadcastStatus | "all">("all");
+
+  const filteredAndSortedBroadcasts = useMemo(() => {
+    let sortableItems = [...broadcasts];
+    if (statusFilter && statusFilter !== "all") {
+      sortableItems = sortableItems.filter((broadcast) => broadcast.status === statusFilter);
+    }
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [broadcasts, sortConfig, statusFilter]);
+
+  const requestSort = (key: SortKey) => {
+    let direction: "ascending" | "descending" = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
 
   useEffect(() => {
     setActiveLink(3);
@@ -167,9 +203,14 @@ export default function Broadcasts() {
     }
   }
 
-  function Header({ children }: { children: any }) {
-    return { children };
-  }
+  const SortableHeader = ({ sortKey, children, className }: { sortKey: SortKey; children: React.ReactNode; className?: string }) => (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <button type="button" onClick={() => requestSort(sortKey)} className="flex items-center gap-2">
+        {children}
+        {sortConfig.key === sortKey && (sortConfig.direction === "ascending" ? <FaChevronUp /> : <FaChevronDown />)}
+      </button>
+    </div>
+  );
 
   return (
     <main className="audioai-main">
@@ -193,19 +234,50 @@ export default function Broadcasts() {
           </button>
         </div>
         <div className="p-4 bg-neutral-800 rounded-xl">
-          <h2 className="text-xl font-bold text-white !mb-4">All Broadcasts</h2>
+          <div className="flex justify-between items-center !mb-4">
+            <h2 className="text-xl font-bold text-white">All Broadcasts</h2>
+            <p className="text-neutral-400 text-sm">
+              {filteredAndSortedBroadcasts.length} result{filteredAndSortedBroadcasts.length === 1 ? "" : "s"}
+            </p>
+          </div>
           {broadcasts.length ? (
             <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table rounded-xl">
               <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
-                <div className="w-[15%] pl-4">Radio Station</div>
-                <div className="w-[25%]">Broadcast Recording</div>
-                <div className="w-[10%] text-center">Duration</div>
-                <div className="w-[20%] text-center">Broadcast Date</div>
-                <div className="w-[10%] text-center">Status</div>
+                <div className="w-[15%] pl-4">
+                  <SortableHeader sortKey="radio_station">Radio Station</SortableHeader>
+                </div>
+                <div className="w-[25%]">
+                  <SortableHeader sortKey="broadcast_recording">Broadcast Recording</SortableHeader>
+                </div>
+                <div className="w-[10%]">
+                  <SortableHeader sortKey="duration" className="justify-center">
+                    Duration
+                  </SortableHeader>
+                </div>
+                <div className="w-[20%]">
+                  <SortableHeader sortKey="broadcast_date" className="justify-center">
+                    Broadcast Date
+                  </SortableHeader>
+                </div>
+                <div className="w-[10%] flex justify-center">
+                    <Select onValueChange={(value: BroadcastStatus | "all") => setStatusFilter(value)} value={statusFilter}>
+                      <SelectTrigger className="w-fit bg-transparent border-none">
+                        <p className="chevron-brother">
+                          Status
+                        </p>
+                      </SelectTrigger>
+                      <SelectContent className="dark">
+                        <SelectItem value="all">Any</SelectItem>
+                        <SelectItem value="Processed">Processed</SelectItem>
+                        <SelectItem value="Processing">Processing</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                      </SelectContent>
+                    </Select>
+                </div>
                 <div className="w-[20%] text-center"></div>
               </div>
               <div className="flex flex-col text-white">
-                {broadcasts.map((row, idx) => (
+                {filteredAndSortedBroadcasts.map((row, idx) => (
                   <div className="odd:bg-neutral-800 bg-neutral-900" key={idx}>
                     <div className={"flex items-center py-4 " + (playingBroadcastId === row.id ? "music-bg" : "")}>
                       <div className="w-[15%] pl-4 flex items-center gap-4">{row.radio_station}</div>
@@ -213,10 +285,10 @@ export default function Broadcasts() {
                         <p className="overflow-ellipsis">{row.broadcast_recording}</p>
                       </div>
                       <div className="w-[10%] text-center">{formatDuration(row.duration)}</div>
-                      <div className="w-[20%] text-center">{row.broadcast_date.toString().slice(0, 10)}</div>
+                      <div className="w-[20%] text-center">{new Date(row.broadcast_date).toISOString().slice(0, 10)}</div>
                       <div
                         className={
-                          (row.status === "Processed" ? "text-green-500" : row.status === "Processing" ? "text-yellow-500" : "text-red-500") +
+                          (row.status === "Processed" ? "text-green-300" : row.status === "Processing" ? "text-yellow-200" : "text-red-300") +
                           " w-[10%] flex justify-center"
                         }
                       >
@@ -251,7 +323,7 @@ export default function Broadcasts() {
                           type="button"
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
                           onClick={() => handleProcessingStart(row.id, row.filename)}
-                          disabled={row.status === "Processed" || row.status === "Processing" || disabledButtons.findIndex((i) => i === row.id) != -1}
+                          disabled={row.status === "Processing" || disabledButtons.findIndex((i) => i === row.id) != -1}
                           title="Process Audio"
                         >
                           <GiDiamonds size={14} />
@@ -298,7 +370,6 @@ export default function Broadcasts() {
                           duration={row.duration}
                           filename={row.filename}
                           playingBroadcastId={playingBroadcastId}
-                          amplitudes={generateAmplitudes(row.broadcast_recording)}
                           regionProps={waveformData}
                           curDuration={curDuration}
                           setCurDuration={setCurDuration}
