@@ -4,13 +4,18 @@ import "react-loading-skeleton/dist/skeleton.css";
 import "@styles/audioMedia.css";
 import { formatDuration } from "@utils/utils";
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCloudDownloadAlt, FaMusic, FaSearch, } from "react-icons/fa";
+import { useEffect, useMemo, useState } from "react";
+import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCloudDownloadAlt, FaMusic, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
 import MusicControls from "@components/MusicControls";
 import { FaCheck, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
 import type { CurDurationType, SongMaster } from "@/types";
+import { Input } from "@components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
+
+type SortKey = keyof SongMaster;
+type SongStatus = "Active" | "Inactive";
 
 export default function SongMasters() {
   const [modal, setModal] = useState(false);
@@ -18,14 +23,60 @@ export default function SongMasters() {
   const [curDuration, setCurDuration] = useState<CurDurationType>({ duration: 0, source: "controls" });
   const [src, setSrc] = useState("");
   const [metadata, setMetadata] = useState<SongMaster>();
-  const [songs, setSongs] = useState<SongMaster[]>([]);
+  const [songs, setSongs] = useState<SongMaster[] | null>(null);
   const [buttonLoading, setButtonLoading] = useState({
     id: -1,
     type: "Music",
   });
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "ascending" | "descending" }>({
+    key: "upload_date",
+    direction: "descending",
+  });
+  const [statusFilter, setStatusFilter] = useState<SongStatus | "all">("all");
+  const [artistSearch, setArtistSearch] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
 
   const apiUrl = import.meta.env["VITE_API_URL"];
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
+
+  const filteredAndSortedSongs = useMemo(() => {
+    if (!songs) return [];
+    let sortableItems = [...songs];
+
+    if (statusFilter !== "all") {
+      sortableItems = sortableItems.filter((song) => song.status === statusFilter);
+    }
+
+    if (artistSearch) {
+      sortableItems = sortableItems.filter((song) => song.artist.toLowerCase().includes(artistSearch.toLowerCase()));
+    }
+
+    if (nameSearch) {
+      sortableItems = sortableItems.filter((song) => song.name.toLowerCase().includes(nameSearch.toLowerCase()));
+    }
+
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return sortableItems;
+  }, [songs, sortConfig, statusFilter, artistSearch, nameSearch]);
+
+  const requestSort = (key: SortKey) => {
+    let direction: "ascending" | "descending" = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
 
   useEffect(() => {
     setActiveLink(2);
@@ -39,7 +90,7 @@ export default function SongMasters() {
     };
 
     fetchSongs();
-  }, []);
+  }, [apiUrl, setActiveLink]);
 
   async function handleMusic(song: SongMaster) {
     if (buttonLoading.id !== -1) {
@@ -117,6 +168,15 @@ export default function SongMasters() {
     }
   }
 
+  const SortableHeader = ({ sortKey, children, className }: { sortKey: SortKey; children: React.ReactNode; className?: string }) => (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <button type="button" onClick={() => requestSort(sortKey)} className="flex items-center gap-2">
+        {children}
+        {sortConfig.key === sortKey && (sortConfig.direction === "ascending" ? <FaChevronUp /> : <FaChevronDown />)}
+      </button>
+    </div>
+  );
+
   return (
     <main className="audioai-main">
       <header className="flex px-12 items-end justify-between h-20">
@@ -129,9 +189,15 @@ export default function SongMasters() {
 
       <div className="flex p-12 pb-30 flex-col">
         <div className="flex justify-between !mb-8">
-          <div className="flex items-center gap-4 w-[300px]">
-            <FaSearch className="text-neutral-400" size={16} />
-            <input type="text" placeholder="Search songs" className="h-10 bg-neutral-700 grow text-white px-4 rounded-md focus:outline-none" />
+          <div className="flex items-center gap-4 text-white">
+            <div className="flex items-center gap-2">
+              <FaSearch className="text-neutral-400" size={16} />
+              <Input type="text" placeholder="Search by Artist" className="dark" value={artistSearch} onChange={(e) => setArtistSearch(e.target.value)} />
+            </div>
+            <div className="flex items-center gap-2">
+              <FaSearch className="text-neutral-400" size={16} />
+              <Input type="text" placeholder="Search by Name" className="dark" value={nameSearch} onChange={(e) => setNameSearch(e.target.value)} />
+            </div>
           </div>
           <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4 font-semibold" onClick={() => setModal(true)}>
             <FaPlus />
@@ -139,19 +205,48 @@ export default function SongMasters() {
           </button>
         </div>
         <div className="p-4 bg-neutral-800 rounded-xl">
-          <h2 className="text-xl font-bold text-white !mb-4 relative">All Song Masters</h2>
-          {songs.length ? (
+          <div className="flex justify-between items-center !mb-4">
+            <h2 className="text-xl font-bold text-white">All Song Masters</h2>
+            <p className="text-neutral-400 text-sm">
+              {filteredAndSortedSongs.length} result{filteredAndSortedSongs.length === 1 ? "" : "s"}
+            </p>
+          </div>
+
+          {songs ? (
             <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table">
               <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
-                <div className="w-[15%] pl-4">Artists</div>
-                <div className="w-[35%]">Name</div>
-                <div className="w-[15%] text-center">Duration</div>
-                <div className="w-[10%] text-center">Upload Date</div>
-                <div className="w-[15%] text-center">Status</div>
+                <div className="w-[15%] pl-4">
+                  <SortableHeader sortKey="artist">Artists</SortableHeader>
+                </div>
+                <div className="w-[35%]">
+                  <SortableHeader sortKey="name">Name</SortableHeader>
+                </div>
+                <div className="w-[15%] text-center">
+                  <SortableHeader sortKey="duration" className="justify-center">
+                    Duration
+                  </SortableHeader>
+                </div>
+                <div className="w-[10%] text-center">
+                  <SortableHeader sortKey="upload_date" className="justify-center">
+                    Upload Date
+                  </SortableHeader>
+                </div>
+                <div className="w-[15%] flex justify-center">
+                  <Select onValueChange={(value: SongStatus | "all") => setStatusFilter(value)} value={statusFilter}>
+                    <SelectTrigger className="w-fit bg-transparent border-none">
+                      <p className="chevron-brother">Status</p>
+                    </SelectTrigger>
+                    <SelectContent className="dark">
+                      <SelectItem value="all">Any</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="w-[10%]"></div>
               </div>
               <div className="flex flex-col text-white">
-                {songs.map((row, idx) => (
+                {filteredAndSortedSongs.map((row, idx) => (
                   <div key={idx} className={"flex items-center py-4 " + (playingSongId === row.id ? "music-bg" : "odd:bg-neutral-800 bg-neutral-900")}>
                     <div className="w-[15%] pl-4">{row.artist}</div>
                     <div className="w-[35%]">{row.name}</div>

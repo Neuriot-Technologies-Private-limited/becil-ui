@@ -160,7 +160,6 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
   }, [drawWaveform]);
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
     const container = containerRef.current;
     if (!container) return;
 

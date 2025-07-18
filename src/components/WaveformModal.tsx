@@ -6,6 +6,8 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { FaMusic, FaPause, FaPlay, FaXmark } from "react-icons/fa6";
 import Waveform from "./Waveform";
+import { toast } from "sonner";
+import CustomToast from "./CustomToast";
 
 type WaveformModalProps = {
   isOpen: boolean;
@@ -72,10 +74,12 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
         }),
       });
 
+      console.log(res)
       if (!res.ok) {
         const errorText = await res.text();
         console.error("Metadata upload failed:", errorText);
       } else {
+        toast.custom(() => <CustomToast status="Extraction has started for the new clip." />);
         setSelectedRegion(null); // Close form on success
         // TODO: refresh data
       }

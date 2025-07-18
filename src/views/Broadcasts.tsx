@@ -30,6 +30,7 @@ import { PuffLoader } from "react-spinners";
 import { FaPlus } from "react-icons/fa6";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
 import { Input } from "@components/ui/input";
+import CustomToast from "@components/CustomToast";
 
 type SortKey = keyof Broadcast;
 type BroadcastStatus = "Processed" | "Processing" | "Pending";
@@ -98,14 +99,7 @@ export default function Broadcasts() {
       toast.custom(
         (t) => {
           toastRef.current = t;
-          return (
-            <div className="flex flex-col gap-4 text-neutral-400 rounded-lg bg-neutral-900 w-72 toast-shadow p-4 overflow-hidden text-sm">
-              <div className="flex flex-col gap-1">
-                <p className="text-white">Processing upload...</p>
-                <p className="truncate">{recordingName}</p>
-              </div>
-            </div>
-          );
+          return <CustomToast status="Processing upload..." data={recordingName} />;
         },
         {
           duration: Infinity,
@@ -250,14 +244,13 @@ export default function Broadcasts() {
     }
   }
 
-  async function handleProcessingStart(id: number, file_name: string) {
+  async function handleProcessingStart(id: number) {
     try {
       setDisabledButtons((prev) => [...prev, id]);
       const res = await fetch(`${apiUrl}/broadcasts/start-processing`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          file_name: file_name,
           broadcast_id: id,
         }),
       });
@@ -429,7 +422,7 @@ export default function Broadcasts() {
                         <button
                           type="button"
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
-                          onClick={() => handleProcessingStart(row.id, row.filename)}
+                          onClick={() => handleProcessingStart(row.id)}
                           disabled={row.status === "Processing" || disabledButtons.findIndex((i) => i === row.id) != -1}
                           title="Process Audio"
                         >
