@@ -2,12 +2,11 @@ import { useRef, useState } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
 import { getLastSegment } from "@utils/utils";
 
-export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploaded }) {
+export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
   const apiUrl = import.meta.env["VITE_API_URL"];
   const [radioStation, setRadioStation] = useState("");
   const [recordingName, setRecordingName] = useState("");
-  const [file, setFile] = useState<File>();
-  const [isUploading, setIsUploading] = useState(false);
+  const [file, setFile] = useState<File | null>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const stationTextareaRef = useRef(null)
@@ -39,8 +38,6 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
       return alert("Please fill in all required fields");
     }
 
-    setIsUploading(true);
-
     try {
       // Get audio duration using HTMLAudioElement
       const getDuration = (file) => {
@@ -56,54 +53,16 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
       };
 
       const duration = await getDuration(file);
-
-      // Step 1: Upload the file to S3 via FastAPI
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const fileRes = await fetch(`${apiUrl}/broadcasts/upload-audio`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!fileRes.ok) {
-        const errorText = await fileRes.text();
-        console.error("Audio upload failed:", errorText);
-        throw new Error("Audio upload failed");
-      }
-
-      const { url } = await fileRes.json();
-
-      // Step 2: Submit metadata to FastAPI
-      const adRes = await fetch(`${apiUrl}/broadcasts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          radio_station: radioStation,
-          broadcast_recording: recordingName,
-          filename: decodeURIComponent(getLastSegment(url)!),
-          duration: duration,
-          status: "Pending",
-        }),
-      });
-      console.log(decodeURIComponent(getLastSegment(url)!));
-
-      if (!adRes.ok) {
-        const errorText = await adRes.text();
-        console.error("Metadata upload failed:", errorText);
-        throw new Error("Failed to upload broadcast metadata");
-      }
-
-      const newAd = await adRes.json();
-      onBroadcastUploaded(newAd);
       onClose();
+      startUpload(file, duration, radioStation, recordingName)
     } catch (err) {
       console.error(err);
       alert("Upload failed. See console for details.");
     } finally {
-      setIsUploading(false);
       setRadioStation("");
       setRecordingName("");
+      setFile(null)
+      fileInputRef.current.value = ''
     }
   };
 
@@ -165,10 +124,9 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
 
           <button
             type="submit"
-            disabled={isUploading}
             className="h-10 bg-orange-400 text-black rounded-md self-end px-4 flex items-center justify-center disabled:bg-orange-200 disabled:cursor-default cursor-pointer"
           >
-            {isUploading ? "Uploading..." : "Submit"}
+            Submit
           </button>
         </form>
       </div>

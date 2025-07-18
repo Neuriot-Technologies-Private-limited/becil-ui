@@ -30,7 +30,6 @@ export default function MusicControls({ audioSrc, setAudioSrc, setPlayingAudioId
     }
 
     const updateProgress = () => {
-      console.log('updateProgress')
       const percent = (audio.currentTime / audio.duration) * 100;
       setProgress(isNaN(percent) ? 0 : percent);
       setCurDuration({duration: audio.currentTime, source: "controls"});

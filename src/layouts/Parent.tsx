@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { Toaster } from "@/components/ui/sonner"
 import { GiMusicalNotes } from "react-icons/gi";
 import { FaBroadcastTower } from "react-icons/fa";
 import { MdHearing, MdLogout } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { Outlet } from "react-router";
 import { PiGear } from "react-icons/pi";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { GoTriangleLeft, GoTriangleRight } from "react-icons/go";
 
 export default function Parent() {
   const navigate = useNavigate();
@@ -42,16 +43,17 @@ export default function Parent() {
 
   return (
     <div className="audioai-root flex">
+      <Toaster />
       <aside className={`text-neutral-300 flex flex-col shrink-0 bg-black transition-all duration-300 ${collapsed ? "w-32" : "w-68"}`}>
         {/* Logo and Header */}
-        <div className={`relative left-0 flex flex-col gap-2 pt-12 pb-6 ${getBorderRadiusClass(0)} ${collapsed ? "items-center" : "items-start left-8"}`}>
+        <div className={`relative left-0 flex flex-col gap-2 pt-8 pb-6 ${getBorderRadiusClass(0)} ${collapsed ? "items-center" : "items-start left-8"}`}>
           <img
-            src="/findoutAi.png"
+            src="/logo.png"
             alt="findoutAiLogo"
             className={`transition-all duration-300 ${collapsed ? "w-24" : "w-3/5"}`}
           />
           <div className="text-sm text-neutral-300 font-light tracking-wide text-center whitespace-nowrap">
-            For Audio Media
+            For Audio
           </div>
         </div>
 
@@ -74,7 +76,7 @@ export default function Parent() {
         <div className={"relative bg-black grow flex items-start justify-center pt-6 " + getBorderRadiusClass(6)}>
           <div className="text-center text-sm text-neutral-500 px-2">
             <a href="https://www.neuriot.com/" target="_blank" rel="noopener noreferrer">
-              Powered by <br /><span className="font-bold">neurIOT Labs</span>
+              Powered by <span className="font-bold">neurIOT Labs</span>
             </a>
           </div>
 
@@ -83,7 +85,7 @@ export default function Parent() {
             onClick={() => setCollapsed(!collapsed)}
             className="absolute top-24 -right-3 bg-black border border-neutral-700 rounded-full p-1 hover:bg-neutral-800"
           >
-            {collapsed ? <IoIosArrowForward /> : <IoIosArrowBack />}
+            {collapsed ? <GoTriangleRight /> : <GoTriangleLeft />}
           </button>
         </div>
       </aside>

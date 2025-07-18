@@ -5,25 +5,14 @@ import "@styles/audioMedia.css";
 import { formatDuration } from "@utils/utils";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import {
-  FaAngleDoubleLeft,
-  FaAngleDoubleRight,
-  FaAngleLeft,
-  FaAngleRight,
-  FaChevronDown,
-  FaChevronUp,
-  FaCloudDownloadAlt,
-  FaFilter,
-  FaMusic,
-  FaSearch,
-  FaTimes,
-} from "react-icons/fa";
+import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaChevronUp, FaCloudDownloadAlt, FaMusic, FaSearch, FaTimes } from "react-icons/fa";
 import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
 import MusicControls from "@components/MusicControls";
-import { FaCheck, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
+import { FaCheck, FaChevronDown, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
 import type { AdMaster, CurDurationType } from "@/types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
+import { Input } from "@components/ui/input";
 
 type SortKey = keyof AdMaster;
 type AdStatus = "Active" | "Inactive";
@@ -44,6 +33,8 @@ export default function AdMasters() {
     direction: "descending",
   });
   const [statusFilter, setStatusFilter] = useState<AdStatus | "all">("all");
+  const [brandSearch, setBrandSearch] = useState("");
+  const [advertisementSearch, setAdvertisementSearch] = useState("");
 
   const filteredAndSortedAds = useMemo(() => {
     let sortableItems = [...ads];
@@ -79,15 +70,24 @@ export default function AdMasters() {
     setActiveLink(1);
     const fetchAds = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/ads`);
+        const params = new URLSearchParams();
+        if (brandSearch) params.append("brand", brandSearch);
+        if (advertisementSearch) params.append("advertisement", advertisementSearch);
+        const response = await axios.get(`${apiUrl}/ads?${params.toString()}`);
         setAds(response.data);
       } catch (error) {
         console.error("Error fetching ads:", error);
       }
     };
 
-    fetchAds();
-  }, []);
+    const handler = setTimeout(() => {
+      fetchAds();
+    }, 500); // Debounce search queries
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [brandSearch, advertisementSearch, apiUrl]);
 
   async function handleMusic(ad: AdMaster) {
     if (buttonLoading.id !== -1) {
@@ -124,10 +124,10 @@ export default function AdMasters() {
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = ad.filename; // You can customize the download name here
+      a.download = ad.filename;
       a.click();
 
-      URL.revokeObjectURL(url); // Clean up the object URL
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Error downloading audio:", err);
     } finally {
@@ -186,9 +186,27 @@ export default function AdMasters() {
 
       <div className="flex p-12 pb-30 flex-col">
         <div className="flex justify-between !mb-8">
-          <div className="flex items-center gap-4 w-[300px]">
-            <FaSearch className="text-neutral-400" size={16} />
-            <input type="text" placeholder="Search Ads" className="h-10 bg-neutral-700 grow text-white px-4 rounded-md focus:outline-none" />
+          <div className="flex items-center gap-4 text-white">
+            <div className="flex items-center gap-2">
+              <FaSearch className="text-neutral-400" size={16} />
+              <Input
+                type="text"
+                placeholder="Search by Brand"
+                className="dark"
+                value={brandSearch}
+                onChange={(e) => setBrandSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <FaSearch className="text-neutral-400" size={16} />
+              <Input
+                type="text"
+                placeholder="Search by Advertisement"
+                className="dark"
+                value={advertisementSearch}
+                onChange={(e) => setAdvertisementSearch(e.target.value)}
+              />
+            </div>
           </div>
           <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4 font-semibold" onClick={() => setModal(true)}>
             <FaPlus />

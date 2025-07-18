@@ -90,3 +90,21 @@ function hslToHex(h: number, s: number, l: number): string {
 
   return `#${[f(0), f(8), f(4)].map(x => x.toString(16).padStart(2, '0')).join('')}`;
 }
+
+
+export function deterministicRandomFromList(numbers) {
+  // Convert the list to a string
+  const str = numbers.join(',');
+
+  // Simple hash function (djb2)
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i); // hash * 33 + c
+  }
+
+  // Make sure it's non-negative
+  hash = Math.abs(hash);
+
+  // Convert to a pseudo-random float between 0 and 1
+  return (hash % 1000000) / 1000000;
+}
