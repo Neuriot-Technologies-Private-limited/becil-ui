@@ -8,6 +8,7 @@ import { FaMusic, FaPause, FaPlay, FaXmark } from "react-icons/fa6";
 import Waveform from "./Waveform";
 import { toast } from "sonner";
 import CustomToast from "./CustomToast";
+import { PuffLoader } from "react-spinners";
 
 type WaveformModalProps = {
   isOpen: boolean;
@@ -15,11 +16,9 @@ type WaveformModalProps = {
   broadcast: Broadcast;
   waveformData: { broadcast_id: number; data: AdDetectionResult[] };
   curDuration: CurDurationType;
-  setCurDuration: (duration: CurDurationType) => void;
-  playingBroadcastId: number;
 };
 
-export default function WaveformModal({ playingBroadcastId, isOpen, onClose, broadcast, waveformData, curDuration, setCurDuration }: WaveformModalProps) {
+export default function WaveformModal({ isOpen, onClose, broadcast, waveformData, curDuration }: WaveformModalProps) {
   const adCount = waveformData.data.filter((ad) => ad.clip_type === "ad").length;
   const totalAdDuration = waveformData.data.filter((ad) => ad.clip_type === "ad").reduce((sum, ad) => sum + ad.duration_seconds, 0);
 
@@ -35,15 +34,15 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
   const [startTime, setStartTime] = useState(0);
   const [endTime, setEndTime] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
+  const [buttonLoading, setButtonLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [src, setSrc] = useState("");
+  const [isAudioLoading, setIsAudioLoading] = useState(true);
 
   useEffect(() => {
     if (selectedRegion) {
       setStartTime(selectedRegion.start_time_seconds);
       setEndTime(selectedRegion.end_time_seconds);
-      setCurrentTime(selectedRegion.start_time_seconds);
       setBrandArtist("");
       setAdvertisementName("");
       setType("ad");
@@ -60,7 +59,7 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsUploading(true);
+    setButtonLoading(true);
     try {
       const res = await fetch(`${apiUrl}/broadcasts/${broadcast.id}/designate_clip`, {
         method: "POST",
@@ -74,43 +73,42 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
         }),
       });
 
-      console.log(res)
       if (!res.ok) {
         const errorText = await res.text();
         console.error("Metadata upload failed:", errorText);
       } else {
         toast.custom(() => <CustomToast status="Extraction has started for the new clip." />);
-        setSelectedRegion(null); // Close form on success
-        // TODO: refresh data
+        setSelectedRegion(null)
       }
     } catch (err) {
       console.error(err);
     } finally {
-      setIsUploading(false);
+      setButtonLoading(false);
     }
   };
 
+  // Update currentTime with audio playback
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const updateProgress = () => {
-      if (audio.currentTime > endTime) {
+      if (audio.currentTime > broadcast.duration) {
         setIsPlaying(false);
         audio.pause();
-        audio.currentTime = startTime;
-        setCurrentTime(startTime);
-      } else {
-        setCurrentTime(audio.currentTime);
+        audio.currentTime = 0;
       }
+      setCurrentTime(audio.currentTime);
     };
 
     audio.addEventListener("timeupdate", updateProgress);
     return () => audio.removeEventListener("timeupdate", updateProgress);
-  }, [startTime, endTime]);
+  }, [src, audioRef]);
 
+  // Fetch audio
   useEffect(() => {
     async function fetchAudio() {
+      setIsAudioLoading(true);
       try {
         const res = await fetch(`${apiUrl}/audio/broadcasts/${broadcast.filename}`);
         if (!res.ok) throw new Error("Failed to fetch audio");
@@ -118,7 +116,9 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
         const audioUrl = URL.createObjectURL(blob);
         setSrc(audioUrl);
       } catch (e: any) {
-        console.log(e);
+        console.error(e);
+      } finally {
+        setIsAudioLoading(false);
       }
     }
     if (isOpen) {
@@ -126,24 +126,11 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
     }
   }, [broadcast.id, broadcast.filename, apiUrl, isOpen]);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !src) return;
-    audio.currentTime = startTime;
-  }, [src, startTime]);
-
   function handleSlider(e: number[]) {
     const st = e[0],
       et = e[1];
     setStartTime(st);
     setEndTime(et);
-    if (audioRef.current.currentTime < st) {
-      audioRef.current.currentTime = st;
-      setCurrentTime(st);
-    } else if (audioRef.current.currentTime > et) {
-      audioRef.current.currentTime = et;
-      setCurrentTime(et);
-    }
   }
 
   function handlePlay() {
@@ -157,13 +144,25 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
     }
   }
 
-  function handleClose(){
-    setSelectedRegion(null)
-    onClose()
+  function handleClose() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    if (src) {
+      URL.revokeObjectURL(src);
+    }
+    setSrc("");
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setSelectedRegion(null);
+    onClose();
   }
 
-  const handleNewAd = (region: AdDetectionResult) => {
-    setSelectedRegion(region);
+  const handleSeek = (time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
   };
 
   if (!isOpen) {
@@ -186,6 +185,10 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
           <div className="col-span-2 flex flex-col gap-6">
             <div className="flex justify-around items-center p-4 bg-neutral-800 rounded-lg">
               <div className="text-center">
+                <div className="text-sm text-neutral-400">Broadcast Duration</div>
+                <div className="text-2xl font-bold">{formatSecondsToHHMMSS(Math.floor(broadcast.duration))}</div>
+              </div>
+              <div className="text-center">
                 <div className="text-sm text-neutral-400">Ad Instances</div>
                 <div className="text-2xl font-bold">{adCount}</div>
               </div>
@@ -195,16 +198,24 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
               </div>
             </div>
             <div className="overflow-hidden rounded-lg bg-neutral-800/50">
+              <div className="flex items-center justify-between p-4">
+                <button onClick={handlePlay} className="p-2 rounded-full hover:bg-neutral-800 w-8 h-8 flex items-center justify-center">
+                  {isAudioLoading ? <PuffLoader color="white" size={15} /> : isPlaying ? <FaPause /> : <FaPlay />}
+                </button>
+                <div className="text-sm">
+                  {formatSecondsToHHMMSS(currentTime)} / {formatSecondsToHHMMSS(broadcast.duration)}
+                </div>
+              </div>
               <Waveform
                 duration={broadcast.duration}
                 filename={broadcast.filename}
-                playingBroadcastId={playingBroadcastId}
                 regionProps={waveformData}
-                curDuration={curDuration}
-                setCurDuration={setCurDuration}
-                onNewAd={handleNewAd}
+                currentTime={currentTime}
+                setSelectedRegion={setSelectedRegion}
+                onSeek={handleSeek}
               />
             </div>
+            <audio ref={audioRef} src={src === "" ? undefined : src} onEnded={() => setIsPlaying(false)} />
             <div className="h-64 overflow-y-auto border border-neutral-800 rounded-lg">
               <Table className="dark">
                 <TableHeader>
@@ -324,6 +335,7 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
                           <p>{formatSecondsToHHMMSS(selectedRegion?.start_time_seconds)}</p>
                           <p>{formatSecondsToHHMMSS(selectedRegion?.end_time_seconds)}</p>
                         </div>
+                        {/*
                         <div className="flex items-center gap-2 text-neutral-400 hover:text-white text-sm cursor-pointer" onClick={handlePlay}>
                           {src === "" ? (
                             <p>Loading...</p>
@@ -339,14 +351,15 @@ export default function WaveformModal({ playingBroadcastId, isOpen, onClose, bro
                             </>
                           )}
                         </div>
+                  <audio ref={audioRef} src={src === "" ? undefined : src} onEnded={() => setIsPlaying(false)} />
+                        */}
                       </>
                     )}
                   </div>
-                  <audio ref={audioRef} src={src === "" ? undefined : src} onEnded={() => setIsPlaying(false)} />
 
                   <button
                     type="submit"
-                    disabled={isUploading}
+                    disabled={buttonLoading}
                     className="h-10 bg-orange-400 text-black rounded-md self-end px-4 flex items-center justify-center disabled:bg-orange-200 disabled:cursor-default cursor-pointer"
                   >
                     Submit

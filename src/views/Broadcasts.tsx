@@ -39,11 +39,8 @@ export default function Broadcasts() {
   const apiUrl = import.meta.env["VITE_API_URL"];
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [src, setSrc] = useState("");
-  const [metadata, setMetadata] = useState<Broadcast>();
-  const [playingBroadcastId, setPlayingBroadcastId] = useState(-1);
+  
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [curDuration, setCurDuration] = useState<CurDurationType>({ duration: 0, source: "controls" });
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
   const [waveformModalOpen, setWaveformModalOpen] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
@@ -197,27 +194,7 @@ export default function Broadcasts() {
     }
   }
 
-  async function handleMusic(brd: Broadcast) {
-    if (buttonLoading.id !== -1) {
-      return;
-    }
-
-    try {
-      setButtonLoading({ id: brd.id, type: "Music" });
-      const res = await fetch(`${apiUrl}/audio/broadcasts/${brd.filename}`);
-      if (!res.ok) throw new Error("Failed to fetch audio");
-
-      const blob = await res.blob();
-      const audioUrl = URL.createObjectURL(blob);
-      setSrc(audioUrl);
-      setPlayingBroadcastId(brd.id);
-      setMetadata(brd);
-    } catch (err) {
-      console.error("Error fetching audio:", err);
-    } finally {
-      setButtonLoading({ id: -1, type: "Music" });
-    }
-  }
+  
 
   async function handleDownload(brd: Broadcast) {
     if (buttonLoading.id !== -1) {
@@ -379,7 +356,7 @@ export default function Broadcasts() {
               <div className="flex flex-col text-white">
                 {filteredAndSortedBroadcasts.map((row) => (
                   <div className="odd:bg-neutral-800 bg-neutral-900" key={row.id}>
-                    <div className={"flex items-center py-4 " + (playingBroadcastId === row.id ? "music-bg" : "")}>
+                    <div className={"flex items-center py-4"}>
                       <div className="w-[15%] pl-4 flex items-center gap-4">{row.radio_station}</div>
                       <div className="w-[25%] whitespace-nowrap">
                         <p className="overflow-ellipsis">{row.broadcast_recording}</p>
@@ -395,21 +372,6 @@ export default function Broadcasts() {
                         {row.status}
                       </div>
                       <div className="w-[20%] flex justify-end gap-1 pr-4">
-                        <button
-                          type="button"
-                          className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer shrink-0 disabled:cursor-default"
-                          title="Play"
-                          onClick={() => handleMusic(row)}
-                          disabled={playingBroadcastId === row.id}
-                        >
-                          {buttonLoading.id === row.id && buttonLoading.type === "Music" ? (
-                            <PuffLoader color="white" size={15} />
-                          ) : playingBroadcastId === row.id ? (
-                            <FaMusic />
-                          ) : (
-                            <FaPlay size={10} />
-                          )}
-                        </button>
                         <button
                           type="button"
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
@@ -472,23 +434,9 @@ export default function Broadcasts() {
           }}
           broadcast={selectedBroadcast}
           waveformData={waveformData}
-          playingBroadcastId={playingBroadcastId}
-          curDuration={curDuration}
-          setCurDuration={setCurDuration}
         />
       )}
-      {src !== "" && metadata && (
-        <MusicControls
-          audioSrc={src}
-          setAudioSrc={setSrc}
-          setPlayingAudioId={setPlayingBroadcastId}
-          title={metadata.broadcast_recording}
-          header={metadata.radio_station}
-          duration={metadata.duration}
-          curDurationProp={curDuration}
-          setCurDuration={setCurDuration}
-        />
-      )}
+      
     </main>
   );
 }

@@ -3,28 +3,24 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Tooltip } from "react-tooltip";
 import { emptyAdSlot } from "@/data";
 import type { AdDetectionResult } from "@/types";
-import { DesignateGapModal } from "./DesignateGapModal";
 import { Slider } from "@components/ui/slider";
 
 type WaveformProps = {
   duration: number;
   regionProps: { broadcast_id: number; data: AdDetectionResult[] };
-  curDuration: { duration: number; source: string };
-  setCurDuration: any;
-  playingBroadcastId: number;
+  currentTime: number;
   filename: string;
-  onNewAd: (region: AdDetectionResult) => void;
+  setSelectedRegion: any;
+  onSeek: (time: number) => void;
 };
 
-const MIN_ZOOM_SECONDS = 20; // Minimum visible duration in seconds
+const MIN_ZOOM_SECONDS = 20;
 const WAVEFORM_HEIGHT = 90;
 
-export default function Waveform({ duration, regionProps, curDuration, setCurDuration, playingBroadcastId, filename, onNewAd }: WaveformProps) {
+export default function Waveform({ duration, regionProps, currentTime, setCurrentTime, filename, setSelectedRegion, onSeek }: WaveformProps) {
   const [fullAmplitudes, setFullAmplitudes] = useState<number[]>([]);
-  const [modal, setModal] = useState({ open: false, region: null });
   const [regions, setRegions] = useState<AdDetectionResult[]>([]);
   const [colors, setColors] = useState<Record<string | number, string>>({});
-  const [src, setSrc] = useState("");
   const [viewRange, setViewRange] = useState<[number, number]>([0, duration]);
 
   const viewStart = viewRange[0];
@@ -33,8 +29,6 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>(null);
-
-  const apiUrl = import.meta.env["VITE_API_URL"];
 
   useEffect(() => {
     const newAmplitudes = generateAmplitudes(filename, duration);
@@ -93,21 +87,6 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
     setColors(colorMap);
   }, [regionProps, duration]);
 
-  useEffect(() => {
-    async function fetchAudio() {
-      try {
-        const res = await fetch(`${apiUrl}/audio/broadcasts/${filename}`);
-        if (!res.ok) throw new Error("Failed to fetch audio");
-        const blob = await res.blob();
-        const audioUrl = URL.createObjectURL(blob);
-        setSrc(audioUrl);
-      } catch (e: any) {
-        console.log(e);
-      }
-    }
-    fetchAudio();
-  }, [filename, apiUrl]);
-
   const drawWaveform = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -139,7 +118,7 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
       const chunk = visibleAmplitudes.slice(chunkStart, chunkEnd);
       if (chunk.length === 0) continue;
 
-      const amp = deterministicRandomFromList(chunk)
+      const amp = deterministicRandomFromList(chunk);
       const minAmp = Math.min(...chunk, 1);
       const maxAmp = Math.max(...chunk, 0);
 
@@ -182,9 +161,7 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const seekTime = viewStart + (clickX / rect.width) * viewDuration;
-    if (regionProps.broadcast_id === playingBroadcastId) {
-      setCurDuration({ duration: seekTime, source: "waveform" });
-    }
+    onSeek(seekTime);
   };
 
   const handleSliderChange = (newRange: [number, number]) => {
@@ -193,18 +170,6 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
     }
     setViewRange(newRange);
   };
-
-  function handleNewAd(region: AdDetectionResult) {
-    if (onNewAd) {
-      onNewAd(region);
-    } else {
-      setModal({ open: true, region });
-    }
-  }
-
-  function handleModalClose() {
-    setModal((prev) => ({ ...prev, open: false }));
-  }
 
   return (
     <div className="p-4 rounded-lg w-full">
@@ -215,7 +180,7 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
         onClick={handleSeek}
         style={{ height: `${WAVEFORM_HEIGHT * 1.2}px` }}
       >
-        <canvas ref={canvasRef} className="w-full" style={{height: `${WAVEFORM_HEIGHT}px`}} />
+        <canvas ref={canvasRef} className="w-full" style={{ height: `${WAVEFORM_HEIGHT}px` }} />
         {regions.map((region, idx) => {
           const left = ((region.start_time_seconds - viewStart) / viewDuration) * 100;
           const width = ((region.end_time_seconds - region.start_time_seconds + 1) / viewDuration) * 100;
@@ -228,42 +193,40 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
 
           return (
             <>
-            <div
-              key={idx}
-              className="absolute top-0"
-              style={{ left: `${left}%`, height: `${WAVEFORM_HEIGHT}px`, width: `${width}%`, backgroundColor: `${color}80` }}
-              data-tooltip-id={tooltipId}
-              data-tooltip-content={`${region.brand} | ${formatSecondsToHHMMSS(region.start_time_seconds)} - ${formatSecondsToHHMMSS(region.end_time_seconds)}`}
-            >
-              <Tooltip id={tooltipId} place="left" float={true} className="z-50" />
-            </div>
-            {region.clip_type === "empty" && (
               <div
-                className="absolute bottom-2 h-2 w-2 rounded-full bg-black cursor-pointer"
-                style={{
-                  left: `${left + width / 2}%`,
-                  translate: `-50% 0%`,
-                  boxShadow: "0px 0px 2px 1px white",
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNewAd(region);
-                }}
-              />
-            )}
+                key={idx}
+                className="absolute top-0"
+                style={{ left: `${left}%`, height: `${WAVEFORM_HEIGHT}px`, width: `${width}%`, backgroundColor: `${color}80` }}
+                data-tooltip-id={tooltipId}
+                data-tooltip-content={`${region.brand} | ${formatSecondsToHHMMSS(region.start_time_seconds)} - ${formatSecondsToHHMMSS(region.end_time_seconds)}`}
+              >
+                <Tooltip id={tooltipId} place="left" float={true} className="z-50" />
+              </div>
+              {region.clip_type === "empty" && (
+                <div
+                  className="absolute bottom-2 h-2 w-2 rounded-full bg-black cursor-pointer"
+                  style={{
+                    left: `${left + width / 2}%`,
+                    translate: `-50% 0%`,
+                    boxShadow: "0px 0px 2px 1px white",
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedRegion(region);
+                  }}
+                />
+              )}
             </>
           );
         })}
-        {regionProps.broadcast_id === playingBroadcastId ? (
-          <div
-            className="bg-white absolute h-full top-0 pointer-events-none z-20"
-            style={{
-              left: `${((curDuration.duration - viewStart) / viewDuration) * 100}%`,
-              height: `${WAVEFORM_HEIGHT}px`,
-              width: "2px",
-            }}
-          />
-        ) : null}
+        <div
+          className="bg-white absolute h-full top-0 pointer-events-none z-20"
+          style={{
+            left: `${((currentTime - viewStart) / viewDuration) * 100}%`,
+            height: `${WAVEFORM_HEIGHT}px`,
+            width: "2px",
+          }}
+        />
       </div>
       <div className="w-full !my-4">
         <Slider
@@ -289,16 +252,6 @@ export default function Waveform({ duration, regionProps, curDuration, setCurDur
           <p>Speech</p>
         </div>
       </div>
-      {modal.region && (
-        <DesignateGapModal
-          onClose={handleModalClose}
-          region={modal.region}
-          src={src}
-          isOpen={modal.open}
-          broadcastId={regionProps.broadcast_id}
-        />
-      )}
     </div>
   );
 }
-
