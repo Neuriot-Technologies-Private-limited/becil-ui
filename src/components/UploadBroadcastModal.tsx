@@ -3,32 +3,36 @@ import { FaMusic, FaXmark } from "react-icons/fa6";
 import { getLastSegment } from "@utils/utils";
 
 export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const [radioStation, setRadioStation] = useState("");
   const [recordingName, setRecordingName] = useState("");
+  const [city, setCity] = useState("")
+  const [language, setLanguage] = useState("")
   const [file, setFile] = useState<File | null>();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRefs = useRef<Record<string, HTMLTextAreaElement>>({
+    advertisement: null,
+    brand: null,
+    category: null,
+    city: null,
+    language: null,
+    radioStation: null,
+  });
 
-  const stationTextareaRef = useRef(null)
-  const recordingTextareaRef = useRef(null)
 
-  const onTextareaResize = (key: "station" | "recording") => {
-    let el: HTMLTextAreaElement;
-    if(key == "station"){
-      el = stationTextareaRef.current;
-    } else {
-      el = recordingTextareaRef.current;
+  const onTextareaResize = () => {
+    for (const el of Object.values(textareaRefs.current)) {
+      if (!el) return;
+      const lineHeight = parseInt(getComputedStyle(el).lineHeight || "15", 10);
+      const maxLines = 5;
+      const maxHeight = lineHeight * maxLines;
+
+      el.style.height = "auto";
+      const newHeight = Math.min(el.scrollHeight, maxHeight);
+      el.style.height = `${newHeight}px`;
+      el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
     }
-    if(!el) return;
-    const lineHeight = parseInt(getComputedStyle(el).lineHeight || "15", 10);
-    const maxLines = 5;
-    const maxHeight = lineHeight * maxLines;
-
-    el.style.height = "auto";
-    const newHeight = Math.min(el.scrollHeight, maxHeight);
-    el.style.height = `${newHeight}px`;
-    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
-  }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +49,7 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
           const audio = document.createElement("audio");
           audio.preload = "metadata";
           audio.onloadedmetadata = () => {
-            resolve(Math.floor(audio.duration)); // round down to seconds
+            resolve(Math.floor(audio.duration));
           };
           audio.onerror = reject;
           audio.src = URL.createObjectURL(file);
@@ -54,7 +58,7 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
 
       const duration = await getDuration(file);
       onClose();
-      startUpload(file, duration, radioStation, recordingName)
+      startUpload(file, duration, radioStation, recordingName, city, language)
     } catch (err) {
       console.error(err);
       alert("Upload failed. See console for details.");
@@ -65,6 +69,8 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
       fileInputRef.current.value = ''
     }
   };
+
+  onTextareaResize()
 
   if (!isOpen) return null;
 
@@ -82,9 +88,7 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
               value={radioStation}
               onChange={(e) => {
                 setRadioStation(e.target.value)
-                onTextareaResize("station")
               }}
-              ref={stationTextareaRef}
               required
               className="pt-2 rounded-md resize-none bg-neutral-800 focus:outline-none px-4"
             />
@@ -96,10 +100,32 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
               value={recordingName}
               onChange={(e) => {
                 setRecordingName(e.target.value)
-                onTextareaResize("recording")
               }}
               required
-              ref={recordingTextareaRef}
+              className="pt-2 rounded-md resize-none bg-neutral-800 focus:outline-none px-4"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label>City</label>
+            <textarea
+              value={city}
+              onChange={(e) => {
+                setCity(e.target.value)
+              }}
+              required
+              className="pt-2 rounded-md resize-none bg-neutral-800 focus:outline-none px-4"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label>Language</label>
+            <textarea
+              value={language}
+              onChange={(e) => {
+                setLanguage(e.target.value)
+              }}
+              required
               className="pt-2 rounded-md resize-none bg-neutral-800 focus:outline-none px-4"
             />
           </div>

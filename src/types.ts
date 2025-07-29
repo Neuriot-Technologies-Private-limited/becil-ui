@@ -6,6 +6,8 @@ export interface Broadcast{
   broadcast_date: Date;
   filename: string;
   status: string;
+  city: string;
+  language: string;
 }
 
 export interface AdMaster{
@@ -16,6 +18,11 @@ export interface AdMaster{
   duration: number;
   filename: string;
   status: string;
+  city: string;
+  language: string;
+  category: string;
+  radio_station: string;
+  creation_date: Date;
 }
 
 export interface AdDetectionResult {

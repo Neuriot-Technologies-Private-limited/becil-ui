@@ -74,6 +74,7 @@ export default function AdMasters() {
         if (brandSearch) params.append("brand", brandSearch);
         if (advertisementSearch) params.append("advertisement", advertisementSearch);
         const response = await axios.get(`${apiUrl}/ads?${params.toString()}`);
+        console.log(response.data)
         setAds(response.data);
       } catch (error) {
         console.error("Error fetching ads:", error);
