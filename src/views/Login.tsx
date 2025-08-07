@@ -44,11 +44,10 @@ export default function Login() {
 
   return (
     <main className="login relative">
-      <div className="login-left">
-        <img src="/airobot.jpg" alt="AI assistant" className="login-robot" />
-      </div>
-      <div className="absolute top-1/2 left-1/2 -translate-y-1/2 w-[300px]">
-        <img src="/findoutAi.jpg" alt="Findout Logo" className="object-fit"/>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px]">
+        <div>
+          <img src="/logo.png" alt="Findout Logo" className="object-fit"/>
+        </div>
         <h1 className="login-header">User Login</h1>
         <form className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">

@@ -91,7 +91,7 @@ export default function Broadcasts() {
     setSortConfig({ key, direction });
   };
 
-  const startUpload = async (file: File = null, duration: number, radioStation: string, recordingName: string) => {
+  const startUpload = async (file: File = null, duration: number, radioStation: string, recordingName: string, city: string, language: string) => {
     setShowProgress(true);
     setCurrentUploadFile(file);
     resetUpload();
@@ -121,6 +121,8 @@ export default function Broadcasts() {
           broadcast_recording: recordingName,
           filename: decodeURIComponent(getLastSegment(url)!),
           duration: duration,
+          city,
+          language,
           status: "Pending",
         },
         {
