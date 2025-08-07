@@ -2,7 +2,13 @@ import { useRef, useState } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
 import { getLastSegment } from "@utils/utils";
 
-export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
+interface UploadBroadcastModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  startUpload: (file: File, duration: number, radioStation: string, recordingName: string, city: string, language: string) => void;
+}
+
+export default function UploadBroadcastModal({ isOpen, onClose, startUpload }: UploadBroadcastModalProps) {
   const [radioStation, setRadioStation] = useState("");
   const [recordingName, setRecordingName] = useState("");
   const [city, setCity] = useState("")
@@ -58,7 +64,7 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }) {
 
       const duration = await getDuration(file);
       onClose();
-      startUpload(file, duration, radioStation, recordingName, city, language)
+      startUpload(file, duration as number, radioStation, recordingName, city, language)
     } catch (err) {
       console.error(err);
       alert("Upload failed. See console for details.");

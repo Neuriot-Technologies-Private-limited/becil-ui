@@ -1,14 +1,25 @@
 import { useState, useRef } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
 import { getLastSegment } from "@utils/utils";
+import { useUploadProgress } from "@/hooks/useUploadProgress";
+import UploadProgressModal from "./UploadProgressModal";
 
-export default function UploadSongModal({ isOpen, onClose, onSongUploaded }){
+interface UploadSongModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSongUploaded: (song: any) => void;
+}
+
+export default function UploadSongModal({ isOpen, onClose, onSongUploaded }: UploadSongModalProps){
   const apiUrl = import.meta.env["VITE_API_URL"];
   const [artist, setArtist] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState("Active");
   const [file, setFile] = useState<File>();
+  const [showProgress, setShowProgress] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  const { uploadState, uploadWithProgress, setProcessing, resetUpload, setUploadState } = useUploadProgress();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -16,11 +27,12 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }){
     e.preventDefault();
     if (!file) return alert("Please select an audio file");
 
+    setShowProgress(true);
     setIsUploading(true);
+    resetUpload();
 
     try {
       // Get audio duration using HTMLAudioElement
-      return
       const getDuration = (file) => {
         return new Promise((resolve, reject) => {
           const audio = document.createElement("audio");
@@ -35,22 +47,22 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }){
 
       const duration = await getDuration(file);
 
-      // Step 1: Upload the file to S3 via FastAPI
+      // Step 1: Upload the file to S3 via FastAPI with progress
       const formData = new FormData();
       formData.append("file", file);
 
-      const fileRes = await fetch(`${apiUrl}/songs/upload-audio`, {
-        method: "POST",
-        body: formData,
+      const uploadResult = await uploadWithProgress(`${apiUrl}/songs/upload-audio`, formData, {
+        onSuccess: (data) => {
+          setProcessing();
+        },
+        onError: (error) => {
+          console.error("Audio upload failed:", error);
+          setShowProgress(false);
+          setIsUploading(false);
+        }
       });
-
-      if (!fileRes.ok) {
-        const errorText = await fileRes.text();
-        console.error("Audio upload failed:", errorText);
-        throw new Error("Audio upload failed");
-      }
-
-      const { url } = await fileRes.json();
+      
+      const { url } = uploadResult;
 
       // Step 2: Submit song metadata to FastAPI
       const songRes = await fetch(`${apiUrl}/songs`, {
@@ -64,7 +76,6 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }){
           status,
         }),
       });
-      console.log(getLastSegment(url));
 
       if (!songRes.ok) {
         const errorText = await songRes.text();
@@ -74,12 +85,15 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }){
 
       const newSong = await songRes.json();
       onSongUploaded(newSong);
-      onClose();
+      setUploadState({ progress: 100, status: "complete" });
+      setIsUploading(false);
+      // Modal will auto-close after 2 seconds via UploadProgressModal
     } catch (err) {
       console.error(err);
       alert("Upload failed. See console for details.");
-    } finally {
+      setShowProgress(false);
       setIsUploading(false);
+    } finally {
       setArtist("");
       setName("");
       setStatus("Active");
@@ -147,6 +161,15 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }){
           </button>
         </form>
       </div>
+      
+      <UploadProgressModal
+        isOpen={showProgress}
+        onClose={() => setShowProgress(false)}
+        fileName={file?.name || ""}
+        progress={uploadState.progress}
+        status={uploadState.status}
+        errorMessage={uploadState.errorMessage}
+      />
     </div>
   );
 };

@@ -44,7 +44,7 @@ export default function Broadcasts() {
   const [currentUploadFile, setCurrentUploadFile] = useState<File | null>(null);
   
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const { uploadState, uploadWithProgress, setProcessing, resetUpload } = useUploadProgress();
+  const { uploadState, uploadWithProgress, setProcessing, resetUpload, setUploadState } = useUploadProgress();
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
   const [waveformModalOpen, setWaveformModalOpen] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
@@ -131,7 +131,8 @@ export default function Broadcasts() {
       );
       const newAd = adRes.data;
       setBroadcasts((prev) => [newAd, ...prev]);
-      setShowProgress(false);
+      setUploadState({ progress: 100, status: "complete" });
+      // Modal will auto-close after 2 seconds via UploadProgressModal
     } catch (err) {
       console.error(err);
       setShowProgress(false);
@@ -432,6 +433,7 @@ export default function Broadcasts() {
           }}
           broadcast={selectedBroadcast}
           waveformData={waveformData}
+          curDuration={{ duration: 0, source: "controls" }}
         />
       )}
       
