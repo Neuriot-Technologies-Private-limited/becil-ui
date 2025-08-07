@@ -40,11 +40,8 @@ type BroadcastStatus = "Processed" | "Processing" | "Pending";
 export default function Broadcasts() {
   const apiUrl = import.meta.env["VITE_API_URL"];
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
-  const [showProgress, setShowProgress] = useState(false);
-  const [currentUploadFile, setCurrentUploadFile] = useState<File | null>(null);
   
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const { uploadState, uploadWithProgress, setProcessing, resetUpload, setUploadState } = useUploadProgress();
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
   const [waveformModalOpen, setWaveformModalOpen] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
@@ -91,53 +88,7 @@ export default function Broadcasts() {
     setSortConfig({ key, direction });
   };
 
-  const startUpload = async (file: File = null, duration: number, radioStation: string, recordingName: string, city: string, language: string) => {
-    setShowProgress(true);
-    setCurrentUploadFile(file);
-    resetUpload();
 
-    try {
-      // Upload the file to S3 via FastAPI with progress
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResult = await uploadWithProgress(`${apiUrl}/broadcasts/upload-audio`, formData, {
-        onSuccess: (data) => {
-          setProcessing();
-        },
-        onError: (error) => {
-          console.error("Audio upload failed:", error);
-          setShowProgress(false);
-        }
-      });
-
-      const { url } = uploadResult;
-
-      // Submit metadata to FastAPI
-      const adRes = await axios.post(
-        `${apiUrl}/broadcasts`,
-        {
-          radio_station: radioStation,
-          broadcast_recording: recordingName,
-          filename: decodeURIComponent(getLastSegment(url)!),
-          duration: duration,
-          city,
-          language,
-          status: "Pending",
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      const newAd = adRes.data;
-      setBroadcasts((prev) => [newAd, ...prev]);
-      setUploadState({ progress: 100, status: "complete" });
-      // Modal will auto-close after 2 seconds via UploadProgressModal
-    } catch (err) {
-      console.error(err);
-      setShowProgress(false);
-    }
-  };
 
   useEffect(() => {
     setActiveLink(3);
@@ -166,20 +117,7 @@ export default function Broadcasts() {
     };
   }, [stationSearch, recordingSearch, apiUrl, setActiveLink]);
 
-  useEffect(() => {
-    const closeAlert = (event) => {
-      if (showProgress) {
-        const message = "Are you sure you want to leave? Your changes may not be saved.";
-        event.returnValue = message; // Standard for older browsers
-        return message; // Standard for modern browsers
-      }
-    };
-    window.addEventListener("beforeunload", closeAlert);
 
-    return () => {
-      window.removeEventListener("beforeunload", closeAlert);
-    };
-  }, [showProgress]);
 
   async function handleWaveformClick(broadcast: Broadcast) {
     setSelectedBroadcast(broadcast);
@@ -423,7 +361,11 @@ export default function Broadcasts() {
           )}
         </div>
       </div>
-      <UploadBroadcastModal isOpen={uploadModalOpen} onClose={() => setUploadModalOpen(false)} startUpload={startUpload} />
+      <UploadBroadcastModal 
+        isOpen={uploadModalOpen} 
+        onClose={() => setUploadModalOpen(false)} 
+        onBroadcastUploaded={(newBroadcast) => setBroadcasts((prev) => [newBroadcast, ...prev])} 
+      />
       {selectedBroadcast && (
         <WaveformModal
           isOpen={waveformModalOpen}

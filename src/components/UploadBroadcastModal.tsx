@@ -1,19 +1,26 @@
 import { useRef, useState } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
 import { getLastSegment } from "@utils/utils";
+import { useUploadProgress } from "@/hooks/useUploadProgress";
+import UploadProgressModal from "./UploadProgressModal";
 
 interface UploadBroadcastModalProps {
   isOpen: boolean;
   onClose: () => void;
-  startUpload: (file: File, duration: number, radioStation: string, recordingName: string, city: string, language: string) => void;
+  onBroadcastUploaded: (broadcast: any) => void;
 }
 
-export default function UploadBroadcastModal({ isOpen, onClose, startUpload }: UploadBroadcastModalProps) {
+export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploaded }: UploadBroadcastModalProps) {
+  const apiUrl = import.meta.env["VITE_API_URL"];
   const [radioStation, setRadioStation] = useState("");
   const [recordingName, setRecordingName] = useState("");
   const [city, setCity] = useState("")
   const [language, setLanguage] = useState("")
   const [file, setFile] = useState<File | null>();
+  const [showProgress, setShowProgress] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const { uploadState, uploadWithProgress, setProcessing, resetUpload, setUploadState } = useUploadProgress();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement>>({
@@ -48,6 +55,10 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }: U
       return alert("Please fill in all required fields");
     }
 
+    setShowProgress(true);
+    setIsUploading(true);
+    resetUpload();
+
     try {
       // Get audio duration using HTMLAudioElement
       const getDuration = (file) => {
@@ -63,16 +74,64 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }: U
       };
 
       const duration = await getDuration(file);
-      onClose();
-      startUpload(file, duration as number, radioStation, recordingName, city, language)
+
+      // Step 1: Upload the file to S3 via FastAPI with progress
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadResult = await uploadWithProgress(`${apiUrl}/broadcasts/upload-audio`, formData, {
+        onSuccess: (data) => {
+          setProcessing();
+        },
+        onError: (error) => {
+          console.error("Audio upload failed:", error);
+          setShowProgress(false);
+          setIsUploading(false);
+        }
+      });
+      
+      const { url } = uploadResult;
+
+      // Step 2: Submit broadcast metadata to FastAPI
+      const broadcastRes = await fetch(`${apiUrl}/broadcasts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          radio_station: radioStation,
+          broadcast_recording: recordingName,
+          filename: getLastSegment(url),
+          duration: duration,
+          city,
+          language,
+          status: "Pending",
+        }),
+      });
+
+      if (!broadcastRes.ok) {
+        const errorText = await broadcastRes.text();
+        console.error("Metadata upload failed:", errorText);
+        throw new Error("Failed to upload broadcast metadata");
+      }
+
+      const newBroadcast = await broadcastRes.json();
+      onBroadcastUploaded(newBroadcast);
+      setUploadState({ progress: 100, status: "complete" });
+      setIsUploading(false);
+      // Modal will auto-close after 2 seconds via UploadProgressModal
     } catch (err) {
       console.error(err);
       alert("Upload failed. See console for details.");
+      setShowProgress(false);
+      setIsUploading(false);
     } finally {
       setRadioStation("");
       setRecordingName("");
-      setFile(null)
-      fileInputRef.current.value = ''
+      setCity("");
+      setLanguage("");
+      setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -156,12 +215,22 @@ export default function UploadBroadcastModal({ isOpen, onClose, startUpload }: U
 
           <button
             type="submit"
+            disabled={isUploading}
             className="h-10 bg-orange-400 text-black rounded-md self-end px-4 flex items-center justify-center disabled:bg-orange-200 disabled:cursor-default cursor-pointer"
           >
-            Submit
+            {isUploading ? "Uploading..." : "Submit"}
           </button>
         </form>
       </div>
+      
+      <UploadProgressModal
+        isOpen={showProgress}
+        onClose={() => setShowProgress(false)}
+        fileName={file?.name || ""}
+        progress={uploadState.progress}
+        status={uploadState.status}
+        errorMessage={uploadState.errorMessage}
+      />
     </div>
   );
 }
