@@ -83,10 +83,15 @@ export const useUploadProgress = () => {
     setUploadState({ progress: 0, status: "idle" });
   }, []);
 
+  const setUploadStateDirect = useCallback((state: UploadProgressState) => {
+    setUploadState(state);
+  }, []);
+
   return {
     uploadState,
     uploadWithProgress,
     setProcessing,
-    resetUpload
+    resetUpload,
+    setUploadState: setUploadStateDirect
   };
 }; 

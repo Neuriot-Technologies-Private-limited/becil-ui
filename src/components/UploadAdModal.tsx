@@ -25,7 +25,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
   const [showProgress, setShowProgress] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   
-  const { uploadState, uploadWithProgress, setProcessing, resetUpload } = useUploadProgress();
+  const { uploadState, uploadWithProgress, setProcessing, resetUpload, setUploadState } = useUploadProgress();
 
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement>>({
     advertisement: null,
@@ -119,7 +119,9 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
 
       const newAd = await adRes.json();
       onAdUploaded(newAd);
-      // onClose();
+      setUploadState({ progress: 100, status: "complete" });
+      setIsUploading(false);
+      // Modal will auto-close after 2 seconds via UploadProgressModal
     } catch (err) {
       console.error(err);
       alert("Upload failed. See console for details.");

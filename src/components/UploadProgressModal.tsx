@@ -29,6 +29,16 @@ export default function UploadProgressModal({
     }
   }, [isOpen]);
 
+  // Auto-close when complete
+  useEffect(() => {
+    if (status === "complete") {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 2000); // Auto-close after 2 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [status, onClose]);
+
   if (!isVisible) return null;
 
   const getStatusText = () => {
