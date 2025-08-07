@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
 import { getLastSegment } from "@utils/utils";
+import UploadProgressModal from "./UploadProgressModal";
+import { useUploadProgress } from "@/hooks/useUploadProgress";
 
 const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
   const apiUrl = import.meta.env["VITE_API_URL"];
@@ -8,7 +10,9 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
   const [advertisement, setAdvertisement] = useState("");
   const [status, setStatus] = useState("Active");
   const [file, setFile] = useState<File>();
-  const [isUploading, setIsUploading] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  
+  const { uploadState, uploadWithProgress, setProcessing, resetUpload } = useUploadProgress();
 
   const adTextareaRef = useRef<HTMLTextAreaElement>(null)
   const brandTextareaRef = useRef<HTMLTextAreaElement>(null)
@@ -37,7 +41,8 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
     e.preventDefault();
     if (!file) return alert("Please select an audio file");
 
-    setIsUploading(true);
+    setShowProgress(true);
+    resetUpload();
 
     try {
       // Get audio duration using HTMLAudioElement
@@ -55,22 +60,21 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
 
       const duration = await getDuration(file);
 
-      // Step 1: Upload the file to S3 via FastAPI
+      // Step 1: Upload the file to S3 via FastAPI with progress
       const formData = new FormData();
       formData.append("file", file);
 
-      const fileRes = await fetch(`${apiUrl}/ads/upload-audio`, {
-        method: "POST",
-        body: formData,
+      const uploadResult = await uploadWithProgress(`${apiUrl}/ads/upload-audio`, formData, {
+        onSuccess: (data) => {
+          setProcessing();
+        },
+        onError: (error) => {
+          console.error("Audio upload failed:", error);
+          setShowProgress(false);
+        }
       });
-
-      if (!fileRes.ok) {
-        const errorText = await fileRes.text();
-        console.error("Audio upload failed:", errorText);
-        throw new Error("Audio upload failed");
-      }
-
-      const { url } = await fileRes.json();
+      
+      const { url } = uploadResult;
 
       // Step 2: Submit ad metadata to FastAPI
       const adRes = await fetch(`${apiUrl}/ads`, {
@@ -94,12 +98,13 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
 
       const newAd = await adRes.json();
       onAdUploaded(newAd);
+      setShowProgress(false);
       onClose();
     } catch (err) {
       console.error(err);
       alert("Upload failed. See console for details.");
+      setShowProgress(false);
     } finally {
-      setIsUploading(false);
       setBrand("");
       setAdvertisement("");
       setStatus("Active");
@@ -168,11 +173,20 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }) => {
               </div>
             )}
           </div>
-          <button type="submit" disabled={isUploading} className="h-10 bg-orange-400 text-black rounded-md self-end px-4 flex items-center justify-center disabled:bg-orange-200 disabled:cursor-default cursor-pointer">
-            {isUploading ? "Uploading..." : "Submit"}
+          <button type="submit" disabled={showProgress} className="h-10 bg-orange-400 text-black rounded-md self-end px-4 flex items-center justify-center disabled:bg-orange-200 disabled:cursor-default cursor-pointer">
+            {showProgress ? "Uploading..." : "Submit"}
           </button>
         </form>
       </div>
+      
+      <UploadProgressModal
+        isOpen={showProgress}
+        onClose={() => setShowProgress(false)}
+        fileName={file?.name || ""}
+        progress={uploadState.progress}
+        status={uploadState.status}
+        errorMessage={uploadState.errorMessage}
+      />
     </div>
   );
 };

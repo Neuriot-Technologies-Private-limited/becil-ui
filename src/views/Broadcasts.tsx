@@ -7,6 +7,8 @@ import { FaPlay } from "react-icons/fa";
 import MusicControls from "@components/MusicControls";
 import { GiDiamonds } from "react-icons/gi";
 import UploadBroadcastModal from "@components/UploadBroadcastModal";
+import UploadProgressModal from "@components/UploadProgressModal";
+import { useUploadProgress } from "@/hooks/useUploadProgress";
 import {
   FaAngleDoubleLeft,
   FaAngleDoubleRight,
@@ -38,9 +40,11 @@ type BroadcastStatus = "Processed" | "Processing" | "Pending";
 export default function Broadcasts() {
   const apiUrl = import.meta.env["VITE_API_URL"];
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [currentUploadFile, setCurrentUploadFile] = useState<File | null>(null);
   
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const { uploadState, uploadWithProgress, setProcessing, resetUpload } = useUploadProgress();
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
   const [waveformModalOpen, setWaveformModalOpen] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
@@ -88,30 +92,26 @@ export default function Broadcasts() {
   };
 
   const startUpload = async (file: File = null, duration: number, radioStation: string, recordingName: string) => {
-    const controller = new AbortController();
+    setShowProgress(true);
+    setCurrentUploadFile(file);
+    resetUpload();
 
     try {
-      // Upload the file to S3 via FastAPI
-      setIsUploading(true);
-      toast.custom(
-        (t) => {
-          toastRef.current = t;
-          return <CustomToast status="Processing upload..." data={recordingName} />;
-        },
-        {
-          duration: Infinity,
-        }
-      );
-
+      // Upload the file to S3 via FastAPI with progress
       const formData = new FormData();
       formData.append("file", file);
 
-      const fileRes = await axios.post(`${apiUrl}/broadcasts/upload-audio`, formData, {
-        signal: controller.signal,
+      const uploadResult = await uploadWithProgress(`${apiUrl}/broadcasts/upload-audio`, formData, {
+        onSuccess: (data) => {
+          setProcessing();
+        },
+        onError: (error) => {
+          console.error("Audio upload failed:", error);
+          setShowProgress(false);
+        }
       });
-      toast.dismiss(toastRef.current);
 
-      const { url } = fileRes.data;
+      const { url } = uploadResult;
 
       // Submit metadata to FastAPI
       const adRes = await axios.post(
@@ -129,14 +129,10 @@ export default function Broadcasts() {
       );
       const newAd = adRes.data;
       setBroadcasts((prev) => [newAd, ...prev]);
+      setShowProgress(false);
     } catch (err) {
-      if (axios.isCancel(err)) {
-        console.log("Upload cancelled");
-      } else {
-        console.error(err);
-      }
-    } finally {
-      setIsUploading(false);
+      console.error(err);
+      setShowProgress(false);
     }
   };
 
@@ -169,7 +165,7 @@ export default function Broadcasts() {
 
   useEffect(() => {
     const closeAlert = (event) => {
-      if (isUploading) {
+      if (showProgress) {
         const message = "Are you sure you want to leave? Your changes may not be saved.";
         event.returnValue = message; // Standard for older browsers
         return message; // Standard for modern browsers
@@ -180,7 +176,7 @@ export default function Broadcasts() {
     return () => {
       window.removeEventListener("beforeunload", closeAlert);
     };
-  }, [isUploading]);
+  }, [showProgress]);
 
   async function handleWaveformClick(broadcast: Broadcast) {
     setSelectedBroadcast(broadcast);

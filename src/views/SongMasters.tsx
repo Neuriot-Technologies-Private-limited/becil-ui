@@ -251,7 +251,19 @@ export default function SongMasters() {
                     <div className="w-[15%] pl-4">{row.artist}</div>
                     <div className="w-[35%]">{row.name}</div>
                     <div className="w-[15%] text-center">{formatDuration(row.duration)}</div>
-                    <div className="w-[10%] text-center">{row.upload_date.toString().slice(0, 10)}</div>
+                    <div className="w-[10%] text-center">
+                      {row.upload_date ? 
+                        (() => {
+                          try {
+                            const date = new Date(row.upload_date);
+                            return isNaN(date.getTime()) ? "Invalid Date" : date.toISOString().slice(0, 10);
+                          } catch {
+                            return "Invalid Date";
+                          }
+                        })() 
+                        : "No Date"
+                      }
+                    </div>
                     <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-600" : " text-red-500")}>{row.status}</div>
                     <div className="w-[10%] flex gap-2 justify-end pr-4">
                       <button
@@ -285,7 +297,7 @@ export default function SongMasters() {
                         type="button"
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0 disabled:cursor-default"
                         title="Status"
-                        onClick={() => handleStatusUpdate(row.id, row.status)}
+                        onClick={() => handleStatusUpdate(row.id, row.status as "Active" | "Inactive")}
                       >
                         {row.status === "Active" ? <FaXmark size={16} /> : <FaCheck size={14} />}
                       </button>
