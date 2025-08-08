@@ -8,6 +8,9 @@ interface UploadProgressModalProps {
   progress: number;
   status: "idle" | "uploading" | "processing" | "complete" | "error";
   errorMessage?: string;
+  message?: string;
+  retryCount?: number;
+  estimatedTime?: string;
 }
 
 export default function UploadProgressModal({
@@ -16,7 +19,10 @@ export default function UploadProgressModal({
   fileName,
   progress,
   status,
-  errorMessage
+  errorMessage,
+  message,
+  retryCount,
+  estimatedTime
 }: UploadProgressModalProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -42,6 +48,10 @@ export default function UploadProgressModal({
   if (!isVisible) return null;
 
   const getStatusText = () => {
+    if (message) {
+      return message;
+    }
+    
     switch (status) {
       case "idle":
         return "Preparing upload...";
@@ -123,6 +133,24 @@ export default function UploadProgressModal({
             </p>
           )}
           
+          {/* Show retry information */}
+          {retryCount && retryCount > 0 && (
+            <div className="w-full p-3 bg-blue-900/20 border border-blue-500/30 rounded-md mb-4">
+              <p className="text-blue-400 text-sm">
+                Retry attempt: {retryCount}/3
+              </p>
+            </div>
+          )}
+          
+          {/* Show estimated time for large files */}
+          {estimatedTime && status === "uploading" && progress > 0 && (
+            <div className="w-full p-3 bg-neutral-800/50 border border-neutral-600/30 rounded-md mb-4">
+              <p className="text-neutral-300 text-sm">
+                {estimatedTime}
+              </p>
+            </div>
+          )}
+          
           <div className="w-full mb-4">
             <div className="flex justify-between text-sm mb-2">
               <span className="text-neutral-400">Progress</span>
@@ -140,6 +168,9 @@ export default function UploadProgressModal({
           {status === "error" && errorMessage && (
             <div className="w-full p-3 bg-red-900/20 border border-red-500/30 rounded-md mb-4">
               <p className="text-red-400 text-sm">{errorMessage}</p>
+              <p className="text-red-300 text-xs mt-1">
+                Large files may take longer to upload. Please try again.
+              </p>
             </div>
           )}
           

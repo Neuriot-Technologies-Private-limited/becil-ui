@@ -87,7 +87,12 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
           console.error("Audio upload failed:", error);
           setShowProgress(false);
           setIsUploading(false);
-        }
+        },
+        onProgress: (progress, message) => {
+          console.log(`Progress: ${progress}% - ${message}`);
+        },
+        maxRetries: 3,
+        timeout: 600000 // 10 minutes for large files
       });
       
       const { url } = uploadResult;
@@ -230,6 +235,9 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
         progress={uploadState.progress}
         status={uploadState.status}
         errorMessage={uploadState.errorMessage}
+        message={uploadState.message}
+        retryCount={uploadState.retryCount}
+        estimatedTime={uploadState.estimatedTime}
       />
     </div>
   );
