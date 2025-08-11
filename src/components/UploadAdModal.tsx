@@ -21,11 +21,11 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
   const [radioStation, setRadioStation] = useState("");
   const [creationDate, setCreationDate] = useState(new Date());
   const [status, setStatus] = useState("Active");
-  const [file, setFile] = useState<File>();
+  const [files, setFiles] = useState<File[]>([]);
   const [showProgress, setShowProgress] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   
-  const { uploadState, uploadWithProgress, setProcessing, resetUpload, setUploadState } = useUploadProgress();
+  const { uploadState, uploadWithProgress, uploadMultipleFiles, setProcessing, resetUpload, setUploadState } = useUploadProgress();
 
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement>>({
     advertisement: null,
@@ -54,7 +54,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return alert("Please select an audio file");
+    if (files.length === 0) return alert("Please select at least one audio file");
 
     setShowProgress(true);
     setIsUploading(true);
@@ -74,6 +74,8 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
         });
       };
 
+      // For now, we'll handle single file upload (can be extended for multiple)
+      const file = files[0];
       const duration = await getDuration(file);
 
       // Step 1: Upload the file to S3 via FastAPI with progress
@@ -92,8 +94,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
         onProgress: (progress, message) => {
           console.log(`Progress: ${progress}% - ${message}`);
         },
-        maxRetries: 3,
-        timeout: 600000 // 10 minutes for large files
+        timeout: 180000 // 3 minutes timeout
       });
       
       const { url } = uploadResult;
@@ -136,6 +137,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
       setBrand("");
       setAdvertisement("");
       setStatus("Active");
+      setFiles([]);
     }
   };
 
@@ -214,18 +216,30 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
 
               <div className="flex flex-col gap-2">
                 <label>Audio File</label>
-                <input ref={fileInputRef} className="hidden" type="file" accept="audio/*" onChange={(e) => setFile(e.target.files![0])} required />
+                <input 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  type="file" 
+                  accept="audio/*" 
+                  multiple
+                  onChange={(e) => setFiles(Array.from(e.target.files || []))} 
+                  required 
+                />
                 <button
                   type="button"
                   className="rounded-md h-10 !mb-1 bg-neutral-800 focus:outline-none self-start px-4"
                   onClick={() => fileInputRef.current!.click()}
                 >
-                  Choose File
+                  Choose File{files.length > 1 ? 's' : ''}
                 </button>
-                {file && (
-                  <div className="flex gap-4 overflow-hidden items-center">
-                    <FaMusic size={14} className="shrink-0 text-neutral-600" />
-                    <p className="text-sm truncate grow break-all line-clamp-1">{file.name}</p>
+                {files.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {files.map((file, index) => (
+                      <div key={index} className="flex gap-4 overflow-hidden items-center">
+                        <FaMusic size={14} className="shrink-0 text-neutral-600" />
+                        <p className="text-sm truncate grow break-all line-clamp-1">{file.name}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -303,13 +317,15 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
       <UploadProgressModal
         isOpen={showProgress}
         onClose={() => setShowProgress(false)}
-        fileName={file?.name || ""}
+        fileName={files.length > 0 ? files[0]?.name || "" : ""}
         progress={uploadState.progress}
         status={uploadState.status}
         errorMessage={uploadState.errorMessage}
         message={uploadState.message}
-        retryCount={uploadState.retryCount}
         estimatedTime={uploadState.estimatedTime}
+        currentFile={uploadState.currentFile}
+        totalFiles={uploadState.totalFiles}
+        currentFileIndex={uploadState.currentFileIndex}
       />
     </div>
   );

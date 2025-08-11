@@ -9,8 +9,10 @@ interface UploadProgressModalProps {
   status: "idle" | "uploading" | "processing" | "complete" | "error";
   errorMessage?: string;
   message?: string;
-  retryCount?: number;
   estimatedTime?: string;
+  currentFile?: string;
+  totalFiles?: number;
+  currentFileIndex?: number;
 }
 
 export default function UploadProgressModal({
@@ -21,8 +23,10 @@ export default function UploadProgressModal({
   status,
   errorMessage,
   message,
-  retryCount,
-  estimatedTime
+  estimatedTime,
+  currentFile,
+  totalFiles,
+  currentFileIndex
 }: UploadProgressModalProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -133,11 +137,11 @@ export default function UploadProgressModal({
             </p>
           )}
           
-          {/* Show retry information */}
-          {retryCount && retryCount > 0 && (
+          {/* Show multi-file upload information */}
+          {totalFiles && totalFiles > 1 && (
             <div className="w-full p-3 bg-blue-900/20 border border-blue-500/30 rounded-md mb-4">
               <p className="text-blue-400 text-sm">
-                Retry attempt: {retryCount}/3
+                File {currentFileIndex} of {totalFiles}: {currentFile}
               </p>
             </div>
           )}

@@ -91,8 +91,7 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
         onProgress: (progress, message) => {
           console.log(`Progress: ${progress}% - ${message}`);
         },
-        maxRetries: 3,
-        timeout: 600000 // 10 minutes for large files
+        timeout: 180000 // 3 minutes timeout
       });
       
       const { url } = uploadResult;
@@ -236,8 +235,10 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
         status={uploadState.status}
         errorMessage={uploadState.errorMessage}
         message={uploadState.message}
-        retryCount={uploadState.retryCount}
         estimatedTime={uploadState.estimatedTime}
+        currentFile={uploadState.currentFile}
+        totalFiles={uploadState.totalFiles}
+        currentFileIndex={uploadState.currentFileIndex}
       />
     </div>
   );

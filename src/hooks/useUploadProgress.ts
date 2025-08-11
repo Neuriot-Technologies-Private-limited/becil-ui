@@ -5,15 +5,16 @@ interface UploadProgressState {
   status: "idle" | "uploading" | "processing" | "complete" | "error";
   errorMessage?: string;
   message?: string;
-  retryCount?: number;
   estimatedTime?: string;
+  currentFile?: string;
+  totalFiles?: number;
+  currentFileIndex?: number;
 }
 
 interface UploadOptions {
   onSuccess?: (data: any) => void;
   onError?: (error: string) => void;
   onProgress?: (progress: number, message: string) => void;
-  maxRetries?: number;
   timeout?: number;
 }
 
@@ -28,157 +29,193 @@ export const useUploadProgress = () => {
     formData: FormData,
     options: UploadOptions = {}
   ): Promise<T> => {
-    const maxRetries = options.maxRetries || 3;
-    const timeout = options.timeout || 600000; // 10 minutes default for large files
+    const timeout = options.timeout || 180000; // 3 minutes default
     
     setUploadState({ 
       progress: 0, 
       status: "uploading", 
-      message: "Starting upload...",
-      retryCount: 0 
+      message: "Starting upload..."
     });
 
     return new Promise((resolve, reject) => {
-      let retryCount = 0;
       let startTime = Date.now();
-      let lastProgressTime = Date.now();
       
-      const attemptUpload = () => {
-        const xhr = new XMLHttpRequest();
-        
-        // Set a very long timeout for large files
-        xhr.timeout = timeout;
-        
-        // Track upload progress with time estimation
-        xhr.upload.addEventListener("progress", (event) => {
-          if (event.lengthComputable) {
-            const progress = Math.round((event.loaded / event.total) * 100);
-            const currentTime = Date.now();
-            const timeElapsed = (currentTime - startTime) / 1000; // seconds
-            
-            // Calculate estimated time remaining
-            let estimatedTime = "";
-            if (progress > 0 && timeElapsed > 0) {
-              const bytesPerSecond = event.loaded / timeElapsed;
-              const remainingBytes = event.total - event.loaded;
-              const remainingSeconds = remainingBytes / bytesPerSecond;
-              
-              if (remainingSeconds > 60) {
-                const minutes = Math.ceil(remainingSeconds / 60);
-                estimatedTime = `${minutes} min remaining`;
-              } else {
-                estimatedTime = `${Math.ceil(remainingSeconds)} sec remaining`;
-              }
-            }
-            
-            const message = `Uploading... ${progress}%`;
-            setUploadState(prev => ({ 
-              ...prev, 
-              progress, 
-              message,
-              retryCount,
-              estimatedTime
-            }));
-            options.onProgress?.(progress, message);
-            
-            lastProgressTime = currentTime;
-          }
-        });
-
-        // Handle successful upload
-        xhr.addEventListener("load", () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const response = JSON.parse(xhr.responseText) as T;
-              setUploadState({ 
-                progress: 100, 
-                status: "complete", 
-                message: "Upload completed successfully!",
-                retryCount 
-              });
-              options.onSuccess?.(response);
-              resolve(response);
-            } catch (error) {
-              const errorMsg = "Failed to parse response";
-              setUploadState({ 
-                progress: 0, 
-                status: "error", 
-                errorMessage: errorMsg,
-                retryCount 
-              });
-              options.onError?.(errorMsg);
-              reject(new Error(errorMsg));
-            }
-          } else {
-            handleUploadError(`Upload failed: ${xhr.status} ${xhr.statusText}`);
-          }
-        });
-
-        // Handle network errors
-        xhr.addEventListener("error", () => {
-          handleUploadError("Network error occurred. Please check your connection.");
-        });
-
-        // Handle timeout with specific message for large files
-        xhr.addEventListener("timeout", () => {
-          const fileSize = formData.get('file') instanceof File ? 
-            (formData.get('file') as File).size : 0;
+      const xhr = new XMLHttpRequest();
+      
+      // Set timeout to 3 minutes
+      xhr.timeout = timeout;
+      
+      // Track upload progress with time estimation
+      xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          const currentTime = Date.now();
+          const timeElapsed = (currentTime - startTime) / 1000; // seconds
           
-          if (fileSize > 100 * 1024 * 1024) { // > 100MB
-            handleUploadError("Upload timed out. Large files may take longer. Please try again.");
-          } else {
-            handleUploadError("Upload timed out. Please try again.");
+          // Calculate estimated time remaining
+          let estimatedTime = "";
+          if (progress > 0 && timeElapsed > 0) {
+            const bytesPerSecond = event.loaded / timeElapsed;
+            const remainingBytes = event.total - event.loaded;
+            const remainingSeconds = remainingBytes / bytesPerSecond;
+            
+            if (remainingSeconds > 60) {
+              const minutes = Math.ceil(remainingSeconds / 60);
+              estimatedTime = `${minutes} min remaining`;
+            } else {
+              estimatedTime = `${Math.ceil(remainingSeconds)} sec remaining`;
+            }
           }
-        });
+          
+          const message = `Uploading... ${progress}%`;
+          setUploadState(prev => ({ 
+            ...prev, 
+            progress, 
+            message,
+            estimatedTime
+          }));
+          options.onProgress?.(progress, message);
+        }
+      });
 
-        // Handle abort
-        xhr.addEventListener("abort", () => {
-          handleUploadError("Upload was cancelled");
-        });
-
-        const handleUploadError = (errorMsg: string) => {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            const retryDelay = Math.min(2000 * retryCount, 10000); // Progressive delay
-            
-            setUploadState(prev => ({ 
-              ...prev, 
-              status: "uploading", 
-              message: `Retrying upload... (${retryCount}/${maxRetries})`,
-              retryCount,
-              progress: 0 // Reset progress for retry
-            }));
-            
-            // Progressive retry delay
-            setTimeout(() => {
-              startTime = Date.now(); // Reset timer for retry
-              attemptUpload();
-            }, retryDelay);
-          } else {
+      // Handle successful upload
+      xhr.addEventListener("load", () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText) as T;
+            setUploadState({ 
+              progress: 100, 
+              status: "complete", 
+              message: "Upload completed successfully!"
+            });
+            options.onSuccess?.(response);
+            resolve(response);
+          } catch (error) {
+            const errorMsg = "Failed to parse response";
             setUploadState({ 
               progress: 0, 
               status: "error", 
-              errorMessage: `${errorMsg} (${maxRetries} retries attempted)`,
-              retryCount 
+              errorMessage: errorMsg
             });
             options.onError?.(errorMsg);
             reject(new Error(errorMsg));
           }
-        };
+        } else {
+          const errorMsg = `Upload failed: ${xhr.status} ${xhr.statusText}`;
+          setUploadState({ 
+            progress: 0, 
+            status: "error", 
+            errorMessage: errorMsg
+          });
+          options.onError?.(errorMsg);
+          reject(new Error(errorMsg));
+        }
+      });
 
-        // Add headers for better error handling
-        xhr.open("POST", url);
-        xhr.setRequestHeader("X-Upload-Retry", retryCount.toString());
-        xhr.setRequestHeader("X-Upload-Timeout", timeout.toString());
-        
-        // Send the request
-        xhr.send(formData);
-      };
+      // Handle network errors
+      xhr.addEventListener("error", () => {
+        const errorMsg = "Network error occurred. Please check your connection.";
+        setUploadState({ 
+          progress: 0, 
+          status: "error", 
+          errorMessage: errorMsg
+        });
+        options.onError?.(errorMsg);
+        reject(new Error(errorMsg));
+      });
 
-      // Start the first attempt
-      attemptUpload();
+      // Handle timeout
+      xhr.addEventListener("timeout", () => {
+        const errorMsg = "Upload timed out after 3 minutes. Please try again.";
+        setUploadState({ 
+          progress: 0, 
+          status: "error", 
+          errorMessage: errorMsg
+        });
+        options.onError?.(errorMsg);
+        reject(new Error(errorMsg));
+      });
+
+      // Handle abort
+      xhr.addEventListener("abort", () => {
+        const errorMsg = "Upload was cancelled";
+        setUploadState({ 
+          progress: 0, 
+          status: "error", 
+          errorMessage: errorMsg
+        });
+        options.onError?.(errorMsg);
+        reject(new Error(errorMsg));
+      });
+
+      // Send the request
+      xhr.open("POST", url);
+      xhr.send(formData);
     });
   }, []);
+
+  // New function for uploading multiple files
+  const uploadMultipleFiles = useCallback(async <T = any>(
+    url: string,
+    files: File[],
+    options: UploadOptions = {}
+  ): Promise<T[]> => {
+    const timeout = options.timeout || 180000; // 3 minutes per file
+    const results: T[] = [];
+    
+    setUploadState({ 
+      progress: 0, 
+      status: "uploading", 
+      message: `Starting upload of ${files.length} files...`,
+      totalFiles: files.length,
+      currentFileIndex: 0
+    });
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      setUploadState(prev => ({ 
+        ...prev, 
+        currentFile: file.name,
+        currentFileIndex: i + 1,
+        message: `Uploading ${file.name} (${i + 1}/${files.length})...`
+      }));
+
+      try {
+        const result = await uploadWithProgress(url, formData, {
+          ...options,
+          timeout,
+          onProgress: (progress, message) => {
+            const overallProgress = Math.round(((i * 100) + progress) / files.length);
+            setUploadState(prev => ({ 
+              ...prev, 
+              progress: overallProgress,
+              message: `${file.name}: ${progress}% (${i + 1}/${files.length})`
+            }));
+            options.onProgress?.(overallProgress, message);
+          }
+        });
+        results.push(result);
+      } catch (error) {
+        setUploadState({ 
+          progress: 0, 
+          status: "error", 
+          errorMessage: `Failed to upload ${file.name}: ${error}`
+        });
+        throw error;
+      }
+    }
+
+    setUploadState({ 
+      progress: 100, 
+      status: "complete", 
+      message: `Successfully uploaded ${files.length} files!`
+    });
+
+    return results;
+  }, [uploadWithProgress]);
 
   const setProcessing = useCallback(() => {
     setUploadState(prev => ({ ...prev, status: "processing" }));
@@ -195,6 +232,7 @@ export const useUploadProgress = () => {
   return {
     uploadState,
     uploadWithProgress,
+    uploadMultipleFiles,
     setProcessing,
     resetUpload,
     setUploadState: setUploadStateDirect
