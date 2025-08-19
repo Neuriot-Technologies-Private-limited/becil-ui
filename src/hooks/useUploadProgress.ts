@@ -24,12 +24,25 @@ export const useUploadProgress = () => {
     status: "idle"
   });
 
+  // Calculate timeout based on file size (longer for larger files)
+  const calculateTimeout = (fileSize: number): number => {
+    const sizeInMB = fileSize / (1024 * 1024);
+    if (sizeInMB > 100) {
+      return 900000; // 15 minutes for files > 100MB
+    } else if (sizeInMB > 50) {
+      return 600000; // 10 minutes for files > 50MB
+    } else {
+      return 300000; // 5 minutes for smaller files
+    }
+  };
+
   const uploadWithProgress = useCallback(async <T = any>(
     url: string,
     formData: FormData,
     options: UploadOptions = {}
   ): Promise<T> => {
-    const timeout = options.timeout || 180000; // 3 minutes default
+    const file = formData.get("file") as File;
+    const timeout = options.timeout || calculateTimeout(file?.size || 0);
     
     setUploadState({ 
       progress: 0, 
@@ -42,7 +55,7 @@ export const useUploadProgress = () => {
       
       const xhr = new XMLHttpRequest();
       
-      // Set timeout to 3 minutes
+      // Set timeout based on file size
       xhr.timeout = timeout;
       
       // Track upload progress with time estimation
@@ -126,7 +139,7 @@ export const useUploadProgress = () => {
 
       // Handle timeout
       xhr.addEventListener("timeout", () => {
-        const errorMsg = "Upload timed out after 3 minutes. Please try again.";
+        const errorMsg = `Upload timed out after ${Math.round(timeout / 1000)} seconds. Please try again.`;
         setUploadState({ 
           progress: 0, 
           status: "error", 
@@ -150,6 +163,10 @@ export const useUploadProgress = () => {
 
       // Send the request
       xhr.open("POST", url);
+      
+      // Add headers to help with CORS
+      xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      
       xhr.send(formData);
     });
   }, []);
@@ -216,6 +233,8 @@ export const useUploadProgress = () => {
 
     return results;
   }, [uploadWithProgress]);
+
+
 
   const setProcessing = useCallback(() => {
     setUploadState(prev => ({ ...prev, status: "processing" }));

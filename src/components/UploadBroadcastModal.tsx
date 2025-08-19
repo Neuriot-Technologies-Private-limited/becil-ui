@@ -91,7 +91,7 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
         onProgress: (progress, message) => {
           console.log(`Progress: ${progress}% - ${message}`);
         },
-        timeout: 180000 // 3 minutes timeout
+        timeout: file.size > 100 * 1024 * 1024 ? 900000 : file.size > 50 * 1024 * 1024 ? 600000 : 300000 // Dynamic timeout based on file size
       });
       
       const { url } = uploadResult;
