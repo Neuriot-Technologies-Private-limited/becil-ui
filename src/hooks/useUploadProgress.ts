@@ -114,7 +114,8 @@ export const useUploadProgress = () => {
             reject(new Error(errorMsg));
           }
         } else {
-          const errorMsg = `Upload failed: ${xhr.status} ${xhr.statusText}`;
+          console.error("Upload failed:", xhr.status, xhr.statusText, xhr.responseText);
+          const errorMsg = `Upload failed: ${xhr.status} ${xhr.statusText}. Response: ${xhr.responseText}`;
           setUploadState({ 
             progress: 0, 
             status: "error", 
@@ -127,7 +128,8 @@ export const useUploadProgress = () => {
 
       // Handle network errors
       xhr.addEventListener("error", () => {
-        const errorMsg = "Network error occurred. Please check your connection.";
+        console.error("XHR Error:", xhr.status, xhr.statusText, xhr.responseText);
+        const errorMsg = `Network error occurred. Status: ${xhr.status} ${xhr.statusText}`;
         setUploadState({ 
           progress: 0, 
           status: "error", 
@@ -165,7 +167,10 @@ export const useUploadProgress = () => {
       xhr.open("POST", url);
       
       // Add headers to help with CORS
+      // DO NOT set Content-Type header - let browser set it automatically for FormData
       xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      
+
       
       xhr.send(formData);
     });
