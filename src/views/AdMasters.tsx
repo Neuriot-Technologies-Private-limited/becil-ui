@@ -13,6 +13,8 @@ import { FaCheck, FaChevronDown, FaPlay, FaPlus, FaXmark } from "react-icons/fa6
 import type { AdMaster, CurDurationType } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
 import { Input } from "@components/ui/input";
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@components/LanguageSwitcher';
 
 type SortKey = keyof AdMaster;
 type AdStatus = "Active" | "Inactive";
@@ -35,6 +37,7 @@ export default function AdMasters() {
   const [statusFilter, setStatusFilter] = useState<AdStatus | "all">("all");
   const [brandSearch, setBrandSearch] = useState("");
   const [advertisementSearch, setAdvertisementSearch] = useState("");
+  const { t } = useTranslation();
 
   const filteredAndSortedAds = useMemo(() => {
     let sortableItems = [...ads];
@@ -178,8 +181,9 @@ export default function AdMasters() {
   return (
     <main className="audioai-main">
       <header className="flex px-12 items-end justify-between h-20">
-        <div className="uppercase font-light text-3xl text-white tracking-widest">Ad Masters</div>
-        <div className="audioai-header-user">
+        <div className="uppercase font-light text-3xl text-white tracking-widest">{t('adMasters.title')}</div>
+        <div className="audioai-header-user flex items-center gap-4">
+          <LanguageSwitcher />
           <img src="/man.jpg" alt="User" className="w-8 h-8 overflow-hidden rounded-full" />
           <span className="text-neutral-400">Rohit</span>
         </div>
@@ -192,7 +196,7 @@ export default function AdMasters() {
               <FaSearch className="text-neutral-400" size={16} />
               <Input
                 type="text"
-                placeholder="Search by Brand"
+                placeholder={t('adMasters.searchByBrand')}
                 className="dark"
                 value={brandSearch}
                 onChange={(e) => setBrandSearch(e.target.value)}
@@ -202,7 +206,7 @@ export default function AdMasters() {
               <FaSearch className="text-neutral-400" size={16} />
               <Input
                 type="text"
-                placeholder="Search by Advertisement"
+                placeholder={t('adMasters.searchByAdvertisement')}
                 className="dark"
                 value={advertisementSearch}
                 onChange={(e) => setAdvertisementSearch(e.target.value)}
@@ -211,44 +215,44 @@ export default function AdMasters() {
           </div>
           <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4 font-semibold" onClick={() => setModal(true)}>
             <FaPlus />
-            New Ad Master
+            {t('adMasters.uploadNewAd')}
           </button>
         </div>
         <div className="p-4 bg-neutral-800 rounded-xl">
           <div className="flex justify-between items-center !mb-4">
-            <h2 className="text-xl font-bold text-white">All Ad Masters</h2>
+            <h2 className="text-xl font-bold text-white">{t('adMasters.title')}</h2>
             <p className="text-neutral-400 text-sm">
-              {filteredAndSortedAds.length} result{filteredAndSortedAds.length === 1 ? "" : "s"}
+              {filteredAndSortedAds.length} {filteredAndSortedAds.length === 1 ? t('common.result') : t('common.results')}
             </p>
           </div>
           {ads.length ? (
             <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table">
               <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
                 <div className="w-[15%] pl-4">
-                  <SortableHeader sortKey="brand">Brand</SortableHeader>
+                  <SortableHeader sortKey="brand">{t('adMasters.brand')}</SortableHeader>
                 </div>
                 <div className="w-[35%]">
-                  <SortableHeader sortKey="advertisement">Advertisement</SortableHeader>
+                  <SortableHeader sortKey="advertisement">{t('adMasters.advertisement')}</SortableHeader>
                 </div>
                 <div className="w-[15%]">
                   <SortableHeader sortKey="duration" className="justify-center">
-                    Duration
+                    {t('common.duration')}
                   </SortableHeader>
                 </div>
                 <div className="w-[10%]">
                   <SortableHeader sortKey="upload_date" className="justify-center">
-                    Upload Date
+                    {t('adMasters.uploadDate')}
                   </SortableHeader>
                 </div>
                 <div className="w-[15%] flex justify-center">
                   <Select onValueChange={(value: AdStatus | "all") => setStatusFilter(value)} value={statusFilter}>
                     <SelectTrigger className="w-fit bg-transparent border-none">
-                      <p className="chevron-brother">Status</p>
+                      <p className="chevron-brother">{t('common.status')}</p>
                     </SelectTrigger>
                     <SelectContent className="dark">
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="all">{t('common.all')} {t('common.status')}</SelectItem>
+                      <SelectItem value="Active">{t('common.active')}</SelectItem>
+                      <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -273,12 +277,14 @@ export default function AdMasters() {
                         : "No Date"
                       }
                     </div>
-                    <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-300" : " text-red-300")}>{row.status}</div>
+                    <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-300" : " text-red-300")}>
+                      {row.status === "Active" ? t('common.active') : t('common.inactive')}
+                    </div>
                     <div className="w-[10%] flex gap-2 justify-end pr-4">
                       <button
                         type="button"
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer shrink-0 disabled:cursor-default"
-                        title="Play"
+                        title={t('common.play')}
                         onClick={() => handleMusic(row)}
                         disabled={playingAdId === row.id}
                       >
@@ -293,7 +299,7 @@ export default function AdMasters() {
                       <button
                         type="button"
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0 disabled:cursor-default"
-                        title="Download"
+                        title={t('common.download')}
                         onClick={() => handleDownload(row)}
                       >
                         {buttonLoading.id === row.id && buttonLoading.type === "Download" ? (
@@ -305,7 +311,7 @@ export default function AdMasters() {
                       <button
                         type="button"
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0 disabled:cursor-default"
-                        title="Status"
+                        title={t('common.status')}
                         onClick={() => handleStatusUpdate(row.id, row.status as "Active" | "Inactive")}
                       >
                         {row.status === "Active" ? <FaXmark size={16} /> : <FaCheck size={14} />}

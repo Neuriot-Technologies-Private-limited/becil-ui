@@ -13,6 +13,8 @@ import { FaCheck, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
 import type { CurDurationType, SongMaster } from "@/types";
 import { Input } from "@components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@components/LanguageSwitcher';
 
 type SortKey = keyof SongMaster;
 type SongStatus = "Active" | "Inactive";
@@ -38,6 +40,7 @@ export default function SongMasters() {
 
   const apiUrl = import.meta.env["VITE_API_URL"];
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
+  const { t } = useTranslation();
 
   const filteredAndSortedSongs = useMemo(() => {
     if (!songs) return [];
@@ -180,8 +183,9 @@ export default function SongMasters() {
   return (
     <main className="audioai-main">
       <header className="flex px-12 items-end justify-between h-20">
-        <div className="uppercase font-light text-3xl text-white tracking-widest">Song Masters</div>
-        <div className="audioai-header-user">
+        <div className="uppercase font-light text-3xl text-white tracking-widest">{t('songMasters.title')}</div>
+        <div className="audioai-header-user flex items-center gap-4">
+          <LanguageSwitcher />
           <img src="/man.jpg" alt="User" className="w-8 h-8 overflow-hidden rounded-full" />
           <span className="text-neutral-400">Rohit</span>
         </div>
@@ -192,23 +196,23 @@ export default function SongMasters() {
           <div className="flex items-center gap-4 text-white">
             <div className="flex items-center gap-2">
               <FaSearch className="text-neutral-400" size={16} />
-              <Input type="text" placeholder="Search by Artist" className="dark" value={artistSearch} onChange={(e) => setArtistSearch(e.target.value)} />
+              <Input type="text" placeholder={t('songMasters.searchByArtist')} className="dark" value={artistSearch} onChange={(e) => setArtistSearch(e.target.value)} />
             </div>
             <div className="flex items-center gap-2">
               <FaSearch className="text-neutral-400" size={16} />
-              <Input type="text" placeholder="Search by Name" className="dark" value={nameSearch} onChange={(e) => setNameSearch(e.target.value)} />
+              <Input type="text" placeholder={t('songMasters.searchByName')} className="dark" value={nameSearch} onChange={(e) => setNameSearch(e.target.value)} />
             </div>
           </div>
           <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4 font-semibold" onClick={() => setModal(true)}>
             <FaPlus />
-            New Song Master
+            {t('songMasters.uploadNewSong')}
           </button>
         </div>
         <div className="p-4 bg-neutral-800 rounded-xl">
           <div className="flex justify-between items-center !mb-4">
-            <h2 className="text-xl font-bold text-white">All Song Masters</h2>
+            <h2 className="text-xl font-bold text-white">{t('songMasters.title')}</h2>
             <p className="text-neutral-400 text-sm">
-              {filteredAndSortedSongs.length} result{filteredAndSortedSongs.length === 1 ? "" : "s"}
+              {filteredAndSortedSongs.length} {filteredAndSortedSongs.length === 1 ? t('common.result') : t('common.results')}
             </p>
           </div>
 
@@ -216,30 +220,30 @@ export default function SongMasters() {
             <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table">
               <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
                 <div className="w-[15%] pl-4">
-                  <SortableHeader sortKey="artist">Artists</SortableHeader>
+                  <SortableHeader sortKey="artist">{t('songMasters.artist')}</SortableHeader>
                 </div>
                 <div className="w-[35%]">
-                  <SortableHeader sortKey="name">Name</SortableHeader>
+                  <SortableHeader sortKey="name">{t('songMasters.name')}</SortableHeader>
                 </div>
                 <div className="w-[15%] text-center">
                   <SortableHeader sortKey="duration" className="justify-center">
-                    Duration
+                    {t('common.duration')}
                   </SortableHeader>
                 </div>
                 <div className="w-[10%] text-center">
                   <SortableHeader sortKey="upload_date" className="justify-center">
-                    Upload Date
+                    {t('songMasters.uploadDate')}
                   </SortableHeader>
                 </div>
                 <div className="w-[15%] flex justify-center">
                   <Select onValueChange={(value: SongStatus | "all") => setStatusFilter(value)} value={statusFilter}>
                     <SelectTrigger className="w-fit bg-transparent border-none">
-                      <p className="chevron-brother">Status</p>
+                      <p className="chevron-brother">{t('common.status')}</p>
                     </SelectTrigger>
                     <SelectContent className="dark">
-                      <SelectItem value="all">Any</SelectItem>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="all">{t('common.all')}</SelectItem>
+                      <SelectItem value="Active">{t('common.active')}</SelectItem>
+                      <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -264,12 +268,14 @@ export default function SongMasters() {
                         : "No Date"
                       }
                     </div>
-                    <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-600" : " text-red-500")}>{row.status}</div>
+                    <div className={"w-[15%] text-center" + (row.status === "Active" ? " text-green-600" : " text-red-500")}>
+                      {row.status === "Active" ? t('common.active') : t('common.inactive')}
+                    </div>
                     <div className="w-[10%] flex gap-2 justify-end pr-4">
                       <button
                         type="button"
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer shrink-0 disabled:cursor-default"
-                        title="Play"
+                        title={t('common.play')}
                         onClick={() => handleMusic(row)}
                         disabled={playingSongId === row.id}
                       >
@@ -284,7 +290,7 @@ export default function SongMasters() {
                       <button
                         type="button"
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0 disabled:cursor-default"
-                        title="Download"
+                        title={t('common.download')}
                         onClick={() => handleDownload(row)}
                       >
                         {buttonLoading.id === row.id && buttonLoading.type === "Download" ? (
@@ -296,7 +302,7 @@ export default function SongMasters() {
                       <button
                         type="button"
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0 disabled:cursor-default"
-                        title="Status"
+                        title={t('common.status')}
                         onClick={() => handleStatusUpdate(row.id, row.status as "Active" | "Inactive")}
                       >
                         {row.status === "Active" ? <FaXmark size={16} /> : <FaCheck size={14} />}

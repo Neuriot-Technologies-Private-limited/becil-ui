@@ -4,6 +4,7 @@ import { getLastSegment } from "@utils/utils";
 import { DatePicker } from "./DatePicker";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
 import UploadProgressModal from "./UploadProgressModal";
+import { useTranslation } from 'react-i18next';
 
 interface UploadAdModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
   const [files, setFiles] = useState<File[]>([]);
   const [showProgress, setShowProgress] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const { t } = useTranslation();
   
   const { uploadState, uploadWithProgress, uploadMultipleFiles, setProcessing, resetUpload, setUploadState } = useUploadProgress();
 
@@ -151,12 +153,12 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
         <button className="absolute top-4 right-4 cursor-pointer" onClick={onClose}>
           <FaXmark />
         </button>
-        <h2 className="text-xl font-bold">Upload New Ad</h2>
+        <h2 className="text-xl font-bold">{t('adMasters.uploadNewAd')}</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 !mt-4">
           <div className="flex gap-8">
             <div className="flex flex-col gap-4 basis-1/2">
               <div className="flex flex-col gap-2">
-                <label>Brand</label>
+                <label>{t('adMasters.brand')}</label>
                 <textarea
                   value={brand}
                   onChange={(e) => {
@@ -173,7 +175,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label>Advertisement</label>
+                <label>{t('adMasters.advertisement')}</label>
                 <textarea
                   value={advertisement}
                   onChange={(e) => {
@@ -190,7 +192,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label>Category</label>
+                <label>{t('adMasters.category')}</label>
                 <textarea
                   value={category}
                   onChange={(e) => {
@@ -207,15 +209,15 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-md h-10 bg-neutral-800 focus:outline-none px-3">
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="Active">{t('common.active')}</option>
+                  <option value="Inactive">{t('common.inactive')}</option>
                 </select>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label>Audio File</label>
+                <label>{t('common.file')}</label>
                 <input 
                   ref={fileInputRef} 
                   className="hidden" 
@@ -230,7 +232,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
                   className="rounded-md h-10 !mb-1 bg-neutral-800 focus:outline-none self-start px-4"
                   onClick={() => fileInputRef.current!.click()}
                 >
-                  Choose File{files.length > 1 ? 's' : ''}
+                  {t('common.chooseFile')}{files.length > 1 ? 's' : ''}
                 </button>
                 {files.length > 0 && (
                   <div className="flex flex-col gap-2">
@@ -247,7 +249,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
 
             <div className="flex flex-col gap-4 basis-1/2">
               <div className="flex flex-col gap-2">
-                <label>City</label>
+                <label>{t('adMasters.city')}</label>
                 <textarea
                   value={city}
                   onChange={(e) => {
@@ -264,7 +266,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label>Language</label>
+                <label>{t('common.language')}</label>
                 <textarea
                   value={language}
                   onChange={(e) => {
@@ -281,7 +283,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label>Radio Station</label>
+                <label>{t('adMasters.radioStation')}</label>
                 <textarea
                   value={radioStation}
                   onChange={(e) => {
@@ -298,7 +300,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label>Date created</label>
+                <label>{t('adMasters.creationDate')}</label>
                 <DatePicker date={creationDate} setDate={setCreationDate} />
               </div>
             </div>
@@ -309,7 +311,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
             disabled={isUploading}
             className="h-10 bg-orange-400 text-black rounded-md self-end px-4 flex items-center justify-center disabled:bg-orange-200 disabled:cursor-default cursor-pointer"
           >
-            {isUploading ? "Uploading..." : "Submit"}
+            {isUploading ? t('common.uploading') : t('common.submit')}
           </button>
         </form>
       </div>

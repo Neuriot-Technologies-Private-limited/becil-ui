@@ -33,6 +33,8 @@ import { FaPlus } from "react-icons/fa6";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
 import { Input } from "@components/ui/input";
 import CustomToast from "@components/CustomToast";
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@components/LanguageSwitcher';
 
 type SortKey = keyof Broadcast;
 type BroadcastStatus = "Processed" | "Processing" | "Pending";
@@ -60,6 +62,7 @@ export default function Broadcasts() {
   const [recordingSearch, setRecordingSearch] = useState("");
 
   const toastRef = useRef(null);
+  const { t } = useTranslation();
 
   const filteredAndSortedBroadcasts = useMemo(() => {
     let sortableItems = [...broadcasts];
@@ -219,8 +222,9 @@ export default function Broadcasts() {
   return (
     <main className="audioai-main">
       <header className="flex px-12 items-end justify-between h-20">
-        <div className="uppercase font-light text-3xl text-white tracking-widest">Broadcasts</div>
-        <div className="audioai-header-user">
+        <div className="uppercase font-light text-3xl text-white tracking-widest">{t('broadcasts.title')}</div>
+        <div className="audioai-header-user flex items-center gap-4">
+          <LanguageSwitcher />
           <img src="/man.jpg" alt="User" className="w-8 h-8 overflow-hidden rounded-full" />
           <span className="text-neutral-400">Rohit</span>
         </div>
@@ -231,13 +235,13 @@ export default function Broadcasts() {
           <div className="flex items-center gap-4 text-white">
             <div className="flex items-center gap-2">
               <FaSearch className="text-neutral-400" size={16} />
-              <Input type="text" placeholder="Search by Station" className="dark" value={stationSearch} onChange={(e) => setStationSearch(e.target.value)} />
+              <Input type="text" placeholder={t('broadcasts.searchByStation')} className="dark" value={stationSearch} onChange={(e) => setStationSearch(e.target.value)} />
             </div>
             <div className="flex items-center gap-2">
               <FaSearch className="text-neutral-400" size={16} />
               <Input
                 type="text"
-                placeholder="Search by Recording"
+                placeholder={t('broadcasts.searchByRecording')}
                 className="dark"
                 value={recordingSearch}
                 onChange={(e) => setRecordingSearch(e.target.value)}
@@ -246,45 +250,45 @@ export default function Broadcasts() {
           </div>
           <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4 font-semibold" onClick={() => setUploadModalOpen(true)}>
             <FaPlus />
-            New Broadcast
+            {t('broadcasts.uploadNewBroadcast')}
           </button>
         </div>
         <div className="p-4 bg-neutral-800 rounded-xl">
           <div className="flex justify-between items-center !mb-4">
-            <h2 className="text-xl font-bold text-white">All Broadcasts</h2>
+            <h2 className="text-xl font-bold text-white">{t('broadcasts.title')}</h2>
             <p className="text-neutral-400 text-sm">
-              {filteredAndSortedBroadcasts.length} result{filteredAndSortedBroadcasts.length === 1 ? "" : "s"}
+              {filteredAndSortedBroadcasts.length} {filteredAndSortedBroadcasts.length === 1 ? t('common.result') : t('common.results')}
             </p>
           </div>
           {broadcasts.length ? (
             <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table rounded-xl">
               <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
                 <div className="w-[15%] pl-4">
-                  <SortableHeader sortKey="radio_station">Radio Station</SortableHeader>
+                  <SortableHeader sortKey="radio_station">{t('broadcasts.radioStation')}</SortableHeader>
                 </div>
                 <div className="w-[25%]">
-                  <SortableHeader sortKey="broadcast_recording">Broadcast Recording</SortableHeader>
+                  <SortableHeader sortKey="broadcast_recording">{t('broadcasts.broadcastRecording')}</SortableHeader>
                 </div>
                 <div className="w-[10%]">
                   <SortableHeader sortKey="duration" className="justify-center">
-                    Duration
+                    {t('common.duration')}
                   </SortableHeader>
                 </div>
                 <div className="w-[20%]">
                   <SortableHeader sortKey="broadcast_date" className="justify-center">
-                    Broadcast Date
+                    {t('broadcasts.broadcastDate')}
                   </SortableHeader>
                 </div>
                 <div className="w-[10%] flex justify-center">
                   <Select onValueChange={(value: BroadcastStatus | "all") => setStatusFilter(value)} value={statusFilter}>
                     <SelectTrigger className="w-fit bg-transparent border-none">
-                      <p className="chevron-brother">Status</p>
+                      <p className="chevron-brother">{t('common.status')}</p>
                     </SelectTrigger>
                     <SelectContent className="dark">
-                      <SelectItem value="all">Any</SelectItem>
-                      <SelectItem value="Processed">Processed</SelectItem>
-                      <SelectItem value="Processing">Processing</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="all">{t('common.all')}</SelectItem>
+                      <SelectItem value="Processed">{t('common.processed')}</SelectItem>
+                      <SelectItem value="Processing">{t('common.processing')}</SelectItem>
+                      <SelectItem value="Pending">{t('common.pending')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -306,13 +310,15 @@ export default function Broadcasts() {
                           " w-[10%] flex justify-center"
                         }
                       >
-                        {row.status}
+                        {row.status === "Processed" ? t('common.processed') : 
+                         row.status === "Processing" ? t('common.processing') : 
+                         t('common.pending')}
                       </div>
                       <div className="w-[20%] flex justify-end gap-1 pr-4">
                         <button
                           type="button"
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
-                          title="Waveform"
+                          title={t('broadcasts.viewWaveform')}
                           onClick={() => handleWaveformClick(row)}
                           disabled={row.status !== "Processed"}
                         >
@@ -323,14 +329,14 @@ export default function Broadcasts() {
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
                           onClick={() => handleProcessingStart(row.id)}
                           disabled={row.status === "Processing" || disabledButtons.findIndex((i) => i === row.id) != -1}
-                          title="Process Audio"
+                          title={t('common.processing')}
                         >
                           <GiDiamonds size={14} />
                         </button>
                         <button
                           type="button"
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
-                          title="Download"
+                          title={t('common.download')}
                           onClick={() => handleDownload(row)}
                         >
                           {buttonLoading.id === row.id && buttonLoading.type === "Download" ? (
@@ -342,7 +348,7 @@ export default function Broadcasts() {
                         <button
                           type="button"
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
-                          title="View Report"
+                          title={t('broadcasts.detectionResults')}
                           disabled={row.status !== "Processed"}
                           onClick={() => handleReport(row)}
                         >

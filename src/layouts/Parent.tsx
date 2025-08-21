@@ -7,11 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { Outlet } from "react-router";
 import { PiGear } from "react-icons/pi";
 import { GoTriangleLeft, GoTriangleRight } from "react-icons/go";
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@components/LanguageSwitcher';
 
 export default function Parent() {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState<boolean>();
   const [activeLink, setActiveLink] = useState(1);
+  const { t } = useTranslation();
 
   // Load sidebar state from localStorage
   useEffect(() => {
@@ -24,11 +27,11 @@ export default function Parent() {
   }, [collapsed]);
 
   const sidebarLinks = [
-    { no: 1, title: "Ad Masters", path: "/admasters", icon: <MdHearing size={18} className="shrink-0" /> },
-    { no: 2, title: "Song Masters", path: "/songmasters", icon: <GiMusicalNotes size={18} className="shrink-0" /> },
-    { no: 3, title: "Broadcasts", path: "/broadcasts", icon: <FaBroadcastTower size={18} className="shrink-0" /> },
-    { no: 4, title: "Settings", path: "/settings", icon: <PiGear size={18} className="shrink-0" /> },
-    { no: 5, title: "Logout", path: "/login", icon: <MdLogout size={18} className="shrink-0" /> },
+    { no: 1, title: t('navigation.adMasters'), path: "/admasters", icon: <MdHearing size={18} className="shrink-0" /> },
+    { no: 2, title: t('navigation.songMasters'), path: "/songmasters", icon: <GiMusicalNotes size={18} className="shrink-0" /> },
+    { no: 3, title: t('navigation.broadcasts'), path: "/broadcasts", icon: <FaBroadcastTower size={18} className="shrink-0" /> },
+    { no: 4, title: t('navigation.settings'), path: "/settings", icon: <PiGear size={18} className="shrink-0" /> },
+    { no: 5, title: t('navigation.logout'), path: "/login", icon: <MdLogout size={18} className="shrink-0" /> },
   ];
 
   const handleLink = (path: string) => {
@@ -44,6 +47,7 @@ export default function Parent() {
   return (
     <div className="audioai-root flex">
       <Toaster />
+      
       <aside className={`text-neutral-300 flex flex-col shrink-0 bg-black transition-all duration-300 ${collapsed ? "w-32" : "w-68"}`}>
         {/* Logo and Header */}
         <div className={`relative left-0 flex flex-col gap-2 pt-8 pb-6 ${getBorderRadiusClass(0)} ${collapsed ? "items-center" : "items-start left-8"}`}>
@@ -53,7 +57,7 @@ export default function Parent() {
             className={`transition-all duration-300 ${collapsed ? "w-24" : "w-3/5"}`}
           />
           <div className="text-sm text-neutral-300 font-light tracking-wide text-center whitespace-nowrap">
-            For Audio
+            {t('navigation.forAudio')}
           </div>
         </div>
 
@@ -76,7 +80,7 @@ export default function Parent() {
         <div className={"relative bg-black grow flex items-start justify-center pt-6 " + getBorderRadiusClass(6)}>
           <div className="text-center text-sm text-neutral-500 px-2">
             <a href="https://www.neuriot.com/" target="_blank" rel="noopener noreferrer">
-              Powered by <span className="font-bold">neurIOT Labs</span>
+              {t('footer.poweredBy')} <span className="font-bold">{t('footer.neurIOTLabs')}</span>
             </a>
           </div>
 

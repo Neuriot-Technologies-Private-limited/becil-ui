@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaXmark, FaCloudArrowUp } from "react-icons/fa6";
+import { useTranslation } from 'react-i18next';
 
 interface UploadProgressModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export default function UploadProgressModal({
   currentFileIndex
 }: UploadProgressModalProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isOpen) {
@@ -58,17 +60,17 @@ export default function UploadProgressModal({
     
     switch (status) {
       case "idle":
-        return "Preparing upload...";
+        return t('upload.processingFile');
       case "uploading":
-        return "Uploading file...";
+        return t('upload.uploadingFile');
       case "processing":
-        return "Processing audio...";
+        return t('upload.processing');
       case "complete":
-        return "Upload complete!";
+        return t('upload.uploadComplete');
       case "error":
-        return "Upload failed";
+        return t('upload.uploadFailed');
       default:
-        return "Preparing upload...";
+        return t('upload.processingFile');
     }
   };
 
@@ -141,7 +143,7 @@ export default function UploadProgressModal({
           {totalFiles && totalFiles > 1 && (
             <div className="w-full p-3 bg-blue-900/20 border border-blue-500/30 rounded-md mb-4">
               <p className="text-blue-400 text-sm">
-                File {currentFileIndex} of {totalFiles}: {currentFile}
+                {t('upload.fileOf', { current: currentFileIndex, total: totalFiles })}: {currentFile}
               </p>
             </div>
           )}
@@ -157,7 +159,7 @@ export default function UploadProgressModal({
           
           <div className="w-full mb-4">
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-neutral-400">Progress</span>
+              <span className="text-neutral-400">{t('upload.progress')}</span>
               <span className={getStatusColor()}>{Math.round(progress)}%</span>
             </div>
             
@@ -173,28 +175,28 @@ export default function UploadProgressModal({
             <div className="w-full p-3 bg-red-900/20 border border-red-500/30 rounded-md mb-4">
               <p className="text-red-400 text-sm">{errorMessage}</p>
               <p className="text-red-300 text-xs mt-1">
-                Large files may take longer to upload. Please try again.
+                {t('upload.uploadFailed')}
               </p>
             </div>
           )}
           
           {status === "complete" && (
             <div className="w-full p-3 bg-green-900/20 border border-green-500/30 rounded-md mb-4">
-              <p className="text-green-400 text-sm">File uploaded successfully!</p>
+              <p className="text-green-400 text-sm">{t('upload.uploadComplete')}</p>
             </div>
           )}
           
           {status === "uploading" && (
             <div className="flex items-center gap-2 text-sm text-neutral-400">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-600 border-t-blue-400"></div>
-              <span>Uploading to server...</span>
+              <span>{t('upload.uploading')}</span>
             </div>
           )}
           
           {status === "processing" && (
             <div className="flex items-center gap-2 text-sm text-neutral-400">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-600 border-t-blue-400"></div>
-              <span>Processing audio file...</span>
+              <span>{t('upload.processing')}</span>
             </div>
           )}
         </div>
