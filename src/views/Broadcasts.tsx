@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import axios from "axios";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { FaPlay } from "react-icons/fa";
@@ -33,15 +32,15 @@ import { FaPlus } from "react-icons/fa6";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
 import { Input } from "@components/ui/input";
 import CustomToast from "@components/CustomToast";
-import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '@components/LanguageSwitcher';
+import { useTranslation } from "react-i18next";
+import ListEmptyState from "@components/ListEmptyState";
 
 type SortKey = keyof Broadcast;
 type BroadcastStatus = "Processed" | "Processing" | "Pending";
 
 export default function Broadcasts() {
   const apiUrl = import.meta.env["VITE_API_URL"];
-  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
+  const [broadcasts, setBroadcasts] = useState<Broadcast[] | null>(null);
   
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
@@ -65,7 +64,7 @@ export default function Broadcasts() {
   const { t } = useTranslation();
 
   const filteredAndSortedBroadcasts = useMemo(() => {
-    let sortableItems = [...broadcasts];
+    let sortableItems = [...(broadcasts ?? [])];
     if (statusFilter && statusFilter !== "all") {
       sortableItems = sortableItems.filter((broadcast) => broadcast.status === statusFilter);
     }
@@ -105,9 +104,10 @@ export default function Broadcasts() {
           throw new Error("Failed to fetch broadcasts");
         }
         const data = await response.json();
-        setBroadcasts(data);
+        setBroadcasts(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching broadcasts:", error);
+        setBroadcasts([]);
       }
     };
 
@@ -178,7 +178,7 @@ export default function Broadcasts() {
           throw new Error("Failed to fetch broadcasts");
         }
         const data = await response.json();
-        setBroadcasts(data);
+        setBroadcasts(Array.isArray(data) ? data : []);
       }
     } catch (e) {
       console.log(e);
@@ -221,100 +221,143 @@ export default function Broadcasts() {
 
   return (
     <main className="audioai-main">
-      <header className="flex px-12 items-end justify-between h-20">
-        <div className="uppercase font-light text-3xl text-white tracking-widest">{t('broadcasts.title')}</div>
-        <div className="audioai-header-user flex items-center gap-4">
-          <LanguageSwitcher />
-          <img src="/man.jpg" alt="User" className="w-8 h-8 overflow-hidden rounded-full" />
-          <span className="text-neutral-400">Rohit</span>
+      <header className="border-b border-neutral-800/80 px-4 py-4 sm:px-6 lg:px-10">
+        <div className="uppercase font-light text-xl tracking-widest text-white sm:text-2xl lg:text-3xl">
+          {t("broadcasts.title")}
         </div>
       </header>
 
-      <div className="flex p-12 pb-30 flex-col">
-        <div className="flex justify-between !mb-8">
-          <div className="flex items-center gap-4 text-white">
-            <div className="flex items-center gap-2">
-              <FaSearch className="text-neutral-400" size={16} />
-              <Input type="text" placeholder={t('broadcasts.searchByStation')} className="dark" value={stationSearch} onChange={(e) => setStationSearch(e.target.value)} />
-            </div>
-            <div className="flex items-center gap-2">
-              <FaSearch className="text-neutral-400" size={16} />
+      <div className="flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="flex min-w-0 flex-1 items-center gap-2 text-white sm:min-w-[12rem] sm:max-w-xs">
+              <FaSearch className="shrink-0 text-neutral-400" size={16} />
               <Input
                 type="text"
-                placeholder={t('broadcasts.searchByRecording')}
-                className="dark"
+                placeholder={t("broadcasts.searchByStation")}
+                className="dark min-w-0 flex-1"
+                value={stationSearch}
+                onChange={(e) => setStationSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex min-w-0 flex-1 items-center gap-2 text-white sm:min-w-[12rem] sm:max-w-xs">
+              <FaSearch className="shrink-0 text-neutral-400" size={16} />
+              <Input
+                type="text"
+                placeholder={t("broadcasts.searchByRecording")}
+                className="dark min-w-0 flex-1"
                 value={recordingSearch}
                 onChange={(e) => setRecordingSearch(e.target.value)}
               />
             </div>
           </div>
-          <button className="flex gap-2 items-center cursor-pointer h-10 bg-neutral-300 rounded-md px-4 font-semibold" onClick={() => setUploadModalOpen(true)}>
+          <button
+            type="button"
+            className="flex h-10 w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md bg-neutral-300 px-4 font-semibold text-neutral-900 hover:bg-neutral-200 sm:w-auto"
+            onClick={() => setUploadModalOpen(true)}
+          >
             <FaPlus />
-            {t('broadcasts.uploadNewBroadcast')}
+            {t("broadcasts.uploadNewBroadcast")}
           </button>
         </div>
-        <div className="p-4 bg-neutral-800 rounded-xl">
-          <div className="flex justify-between items-center !mb-4">
-            <h2 className="text-xl font-bold text-white">{t('broadcasts.title')}</h2>
-            <p className="text-neutral-400 text-sm">
-              {filteredAndSortedBroadcasts.length} {filteredAndSortedBroadcasts.length === 1 ? t('common.result') : t('common.results')}
-            </p>
+        <div className="rounded-xl bg-neutral-800 p-3 sm:p-4">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-lg font-bold text-white sm:text-xl">{t("broadcasts.title")}</h2>
+            {broadcasts !== null && filteredAndSortedBroadcasts.length > 0 ? (
+              <p className="text-sm text-neutral-400">
+                {filteredAndSortedBroadcasts.length}{" "}
+                {filteredAndSortedBroadcasts.length === 1 ? t("common.result") : t("common.results")}
+              </p>
+            ) : null}
           </div>
-          {broadcasts.length ? (
-            <div className="w-full flex flex-col max-h-[80vh] overflow-auto scroll-table rounded-xl">
-              <div className="rounded-xl border-orange-300 border min-h-16 text-neutral-200 flex items-center font-bold bg-[var(--bg-color)] sticky top-0 z-30">
-                <div className="w-[15%] pl-4">
-                  <SortableHeader sortKey="radio_station">{t('broadcasts.radioStation')}</SortableHeader>
+          {broadcasts === null ? (
+            <SkeletonTheme baseColor={"#555555"} highlightColor={"#CCCCCC"}>
+              <Skeleton count={10} height={32} containerClassName="gap-0.5 flex flex-col" />
+            </SkeletonTheme>
+          ) : filteredAndSortedBroadcasts.length === 0 ? (
+            broadcasts.length === 0 && !stationSearch && !recordingSearch ? (
+              <ListEmptyState
+                title={t("broadcasts.noBroadcastsFound")}
+                description={t("broadcasts.emptyLibraryHint")}
+                actionLabel={t("broadcasts.uploadNewBroadcast")}
+                onAction={() => setUploadModalOpen(true)}
+              />
+            ) : (
+              <ListEmptyState
+                title={t("common.noMatchingResults")}
+                description={t("common.noMatchingDescription")}
+                actionLabel={t("broadcasts.uploadNewBroadcast")}
+                onAction={() => setUploadModalOpen(true)}
+                secondaryActionLabel={t("common.clearFilters")}
+                onSecondaryAction={() => {
+                  setStationSearch("");
+                  setRecordingSearch("");
+                  setStatusFilter("all");
+                }}
+              />
+            )
+          ) : (
+            <div className="scroll-table flex max-h-[min(80vh,720px)] w-full flex-col overflow-auto rounded-lg">
+              <div className="min-w-[60rem]">
+              <div className="sticky top-0 z-30 flex min-h-16 items-center border border-orange-300 bg-[var(--bg-color)] font-bold text-neutral-200 rounded-t-xl">
+                <div className="w-[15%] shrink-0 pl-3 sm:pl-4">
+                  <SortableHeader sortKey="radio_station">{t("broadcasts.radioStation")}</SortableHeader>
                 </div>
-                <div className="w-[25%]">
-                  <SortableHeader sortKey="broadcast_recording">{t('broadcasts.broadcastRecording')}</SortableHeader>
+                <div className="w-[25%] shrink-0 pr-2">
+                  <SortableHeader sortKey="broadcast_recording">{t("broadcasts.broadcastRecording")}</SortableHeader>
                 </div>
-                <div className="w-[10%]">
+                <div className="w-[10%] shrink-0">
                   <SortableHeader sortKey="duration" className="justify-center">
-                    {t('common.duration')}
+                    {t("common.duration")}
                   </SortableHeader>
                 </div>
-                <div className="w-[20%]">
+                <div className="w-[20%] shrink-0">
                   <SortableHeader sortKey="broadcast_date" className="justify-center">
-                    {t('broadcasts.broadcastDate')}
+                    {t("broadcasts.broadcastDate")}
                   </SortableHeader>
                 </div>
-                <div className="w-[10%] flex justify-center">
+                <div className="flex w-[10%] shrink-0 justify-center">
                   <Select onValueChange={(value: BroadcastStatus | "all") => setStatusFilter(value)} value={statusFilter}>
-                    <SelectTrigger className="w-fit bg-transparent border-none">
-                      <p className="chevron-brother">{t('common.status')}</p>
+                    <SelectTrigger className="w-fit border-none bg-transparent">
+                      <p className="chevron-brother">{t("common.status")}</p>
                     </SelectTrigger>
                     <SelectContent className="dark">
-                      <SelectItem value="all">{t('common.all')}</SelectItem>
-                      <SelectItem value="Processed">{t('common.processed')}</SelectItem>
-                      <SelectItem value="Processing">{t('common.processing')}</SelectItem>
-                      <SelectItem value="Pending">{t('common.pending')}</SelectItem>
+                      <SelectItem value="all">{t("common.all")}</SelectItem>
+                      <SelectItem value="Processed">{t("common.processed")}</SelectItem>
+                      <SelectItem value="Processing">{t("common.processing")}</SelectItem>
+                      <SelectItem value="Pending">{t("common.pending")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="w-[20%] text-center"></div>
+                <div className="w-[20%] shrink-0 text-center" />
               </div>
               <div className="flex flex-col text-white">
                 {filteredAndSortedBroadcasts.map((row) => (
                   <div className="odd:bg-neutral-800 bg-neutral-900" key={row.id}>
-                    <div className={"flex items-center py-4"}>
-                      <div className="w-[15%] pl-4 flex items-center gap-4">{row.radio_station}</div>
-                      <div className="w-[25%] whitespace-nowrap">
-                        <p className="overflow-ellipsis">{row.broadcast_recording}</p>
+                    <div className="flex min-w-[60rem] items-center py-3 sm:py-4">
+                      <div className="flex w-[15%] shrink-0 items-center gap-2 truncate pl-3 sm:gap-4 sm:pl-4" title={row.radio_station}>
+                        {row.radio_station}
                       </div>
-                      <div className="w-[10%] text-center">{formatDuration(row.duration)}</div>
-                      <div className="w-[20%] text-center">{new Date(row.broadcast_date).toISOString().slice(0, 10)}</div>
+                      <div className="w-[25%] shrink-0 pr-2">
+                        <p className="truncate" title={row.broadcast_recording}>
+                          {row.broadcast_recording}
+                        </p>
+                      </div>
+                      <div className="w-[10%] shrink-0 text-center text-sm sm:text-base">{formatDuration(row.duration)}</div>
+                      <div className="w-[20%] shrink-0 text-center text-sm sm:text-base">
+                        {new Date(row.broadcast_date).toISOString().slice(0, 10)}
+                      </div>
                       <div
                         className={
                           (row.status === "Processed" ? "text-green-300" : row.status === "Processing" ? "text-yellow-200" : "text-red-300") +
-                          " w-[10%] flex justify-center"
+                          " flex w-[10%] shrink-0 justify-center text-center text-xs sm:text-sm"
                         }
                       >
                         {row.status === "Processed" ? t('common.processed') : 
                          row.status === "Processing" ? t('common.processing') : 
                          t('common.pending')}
                       </div>
-                      <div className="w-[20%] flex justify-end gap-1 pr-4">
+                      <div className="flex w-[20%] shrink-0 justify-end gap-0.5 pr-2 sm:gap-1 sm:pr-4">
                         <button
                           type="button"
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
@@ -359,18 +402,17 @@ export default function Broadcasts() {
                   </div>
                 ))}
               </div>
+              </div>
             </div>
-          ) : (
-            <SkeletonTheme baseColor={"#555555"} highlightColor={"#CCCCCC"}>
-              <Skeleton count={10} height={32} containerClassName="gap-0.5 flex flex-col" />
-            </SkeletonTheme>
           )}
         </div>
       </div>
       <UploadBroadcastModal 
         isOpen={uploadModalOpen} 
         onClose={() => setUploadModalOpen(false)} 
-        onBroadcastUploaded={(newBroadcast) => setBroadcasts((prev) => [newBroadcast, ...prev])} 
+        onBroadcastUploaded={(newBroadcast) =>
+          setBroadcasts((prev) => (prev === null ? [newBroadcast] : [newBroadcast, ...prev]))
+        } 
       />
       {selectedBroadcast && (
         <WaveformModal

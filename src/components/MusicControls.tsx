@@ -82,43 +82,54 @@ export default function MusicControls({ audioSrc, setAudioSrc, setPlayingAudioId
   }
 
   return (
-    <div className="w-[500px] bg-neutral-600 p-4 flex items-center justify-between rounded-2xl fixed bottom-3 left-1/2 -translate-x-[calc(50%-12rem)] z-50 text-white">
-      <div className="flex items-center gap-4 w-full">
-        {/* Seek buttons */}
-        <div className="flex items-center gap-2">
-          <button onClick={() => seekBy(-60)} title="Back 1 min" className="text-white hover:text-orange-400">
-            <MdFastRewind size={24} />
-          </button>
-          <button onClick={() => seekBy(-5)} title="Back 5 sec" className="text-white hover:text-orange-400">
-            <MdFastRewind size={18} />
-          </button>
+    <div
+      className="fixed left-1/2 z-50 w-[min(100%-1.25rem,36rem)] max-w-xl -translate-x-1/2 rounded-2xl bg-neutral-600 px-3 py-3 text-white shadow-lg sm:px-4 sm:py-4"
+      style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))" }}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-start sm:gap-2">
+            <button type="button" onClick={() => seekBy(-60)} title="Back 1 min" className="hidden text-white hover:text-orange-400 sm:inline-flex">
+              <MdFastRewind size={22} />
+            </button>
+            <button type="button" onClick={() => seekBy(-5)} title="Back 5 sec" className="text-white hover:text-orange-400">
+              <MdFastRewind size={18} />
+            </button>
 
-          <button onClick={togglePlay} className="bg-white text-black p-3 rounded-full hover:bg-gray-300 transition !mx-2">
-            {isPlaying ? <FaPause size={15} /> : <FaPlay size={15} />}
-          </button>
-          <button onClick={() => seekBy(5)} title="Forward 5 sec" className="text-white hover:text-orange-400">
-            <MdFastForward size={18} />
-          </button>
-          <button onClick={() => seekBy(60)} title="Forward 1 min" className="text-white hover:text-orange-400">
-            <MdFastForward size={24} />
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={togglePlay}
+              className="mx-1 rounded-full bg-white p-2.5 text-black transition hover:bg-gray-300 sm:p-3"
+            >
+              {isPlaying ? <FaPause size={14} /> : <FaPlay size={14} />}
+            </button>
+            <button type="button" onClick={() => seekBy(5)} title="Forward 5 sec" className="text-white hover:text-orange-400">
+              <MdFastForward size={18} />
+            </button>
+            <button type="button" onClick={() => seekBy(60)} title="Forward 1 min" className="hidden text-white hover:text-orange-400 sm:inline-flex">
+              <MdFastForward size={22} />
+            </button>
+          </div>
 
-        <div className="flex-1 overflow-hidden">
-          <div className="text-sm font-medium truncate">{header}</div>
-          <div className="text-xs text-gray-300 truncate !mb-1">{title}</div>
-          <div className="h-2 bg-gray-700 rounded-full mt-1 overflow-hidden">
-            <div className="bg-orange-500 h-full transition-all" style={{ width: `${progress}%` }} />
+          <div className="min-w-0 flex-1 overflow-hidden pr-7 sm:pr-8">
+            <div className="truncate text-sm font-medium">{header}</div>
+            <div className="mb-1 truncate text-xs text-gray-300">{title}</div>
+            <div className="mt-1 h-2 overflow-hidden rounded-full bg-gray-700">
+              <div className="h-full bg-orange-500 transition-all" style={{ width: `${progress}%` }} />
+            </div>
+            <div className="mt-1 flex justify-between text-xs text-gray-400">
+              <span>{formatSecondsToHHMMSS(currentTime)}</span>
+              <span>{formatSecondsToHHMMSS(duration)}</span>
+            </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1 flex justify-between">
-            <span>{formatSecondsToHHMMSS(currentTime)}</span>
-            <span>{formatSecondsToHHMMSS(duration)}</span>
-          </div>
-        </div>
       </div>
       <audio ref={audioRef} src={audioSrc} onEnded={() => setIsPlaying(false)} />
-      <button className="absolute right-2 top-2 bg-neutral-700 hover:bg-neutral-500 text-neutral-400 hover:text-white size-6 rounded-full cursor-pointer flex justify-center items-center" onClick={handleClose}>
-        <FaXmark size={12}/>
+      <button
+        type="button"
+        className="absolute right-2 top-2 flex size-7 cursor-pointer items-center justify-center rounded-full bg-neutral-700 text-neutral-400 hover:bg-neutral-500 hover:text-white sm:size-6"
+        onClick={handleClose}
+        aria-label="Close player"
+      >
+        <FaXmark size={12} />
       </button>
     </div>
   );

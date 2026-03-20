@@ -46,7 +46,10 @@
     "continue": "Continue",
     "language": "Language",
     "result": "result",
-    "results": "results"
+    "results": "results",
+    "noMatchingResults": "No results match your search or filters.",
+    "noMatchingDescription": "Try changing or clearing your search and filters.",
+    "clearFilters": "Clear filters"
   },
   "login": {
     "title": "User Login",
@@ -80,6 +83,7 @@
     "searchByBrand": "Search by brand...",
     "searchByAdvertisement": "Search by advertisement...",
     "noAdsFound": "No ads found",
+    "emptyLibraryHint": "Upload an ad to see it in this list.",
     "uploadSuccess": "Ad uploaded successfully",
     "uploadError": "Failed to upload ad"
   },
@@ -93,7 +97,9 @@
     "year": "Year",
     "searchByArtist": "Search by artist...",
     "searchByName": "Search by name...",
+    "uploadDate": "Upload Date",
     "noSongsFound": "No songs found",
+    "emptyLibraryHint": "Upload a song to see it in this list.",
     "uploadSuccess": "Song uploaded successfully",
     "uploadError": "Failed to upload song"
   },
@@ -106,6 +112,7 @@
     "searchByStation": "Search by station...",
     "searchByRecording": "Search by recording...",
     "noBroadcastsFound": "No broadcasts found",
+    "emptyLibraryHint": "Upload a broadcast recording to see it in this list.",
     "uploadSuccess": "Broadcast uploaded successfully",
     "uploadError": "Failed to upload broadcast",
     "viewWaveform": "View Waveform",

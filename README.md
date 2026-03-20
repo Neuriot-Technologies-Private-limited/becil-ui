@@ -18,9 +18,25 @@ npm i --force
 npm run dev
 ```
 
-Requires .env file with the following secrets:
+Create `.env` from the template (only one variable is required):
 
+```bash
+cp .env.example .env
 ```
-VITE_API_URL
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | Yes | Backend base URL **including** `/api` (no trailing slash), e.g. `http://localhost:8000/api` |
+
+Used across views and upload/waveform components. Vite only loads names prefixed with `VITE_`.
+
+## Check backend + uploads
+
+With the API running (e.g. `http://localhost:8000`):
+
+```bash
+curl -s http://localhost:8000/api/health | python3 -m json.tool
 ```
-which is the uri for the backend server, with the /api segment at the end.
+
+- `ok: true` — database OK.
+- `uploads_ready: true` — S3 is configured; **upload** from the app should work. If false, fix backend `.env` (see `becil-audio-bkend/README.md`).

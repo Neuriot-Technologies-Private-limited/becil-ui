@@ -1,6 +1,8 @@
 #root {
   font-family: "Inter", sans-serif;
   --bg-color: #000000;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 .bubble-background {

@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import Bubbles from '@components/Bubbles'
+import { useState } from "react";
 import "@styles/login.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -46,35 +45,56 @@ export default function Login() {
   };
 
   return (
-    <main className="login relative">
-      {/* Language Switcher in top right corner */}
-      <div className="absolute top-4 right-4 z-10">
+    <main className="login relative flex min-h-dvh flex-col">
+      <div className="absolute right-3 top-3 z-10 sm:right-6 sm:top-6">
         <LanguageSwitcher />
       </div>
-      
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px]">
-        <div>
-          <img src="/logo.png" alt="Findout Logo" className="object-fit"/>
+
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-16 sm:px-6">
+        <div className="w-full max-w-sm">
+          <img src="/logo.png" alt="Findout Logo" className="mx-auto h-auto w-full max-w-[220px] object-contain sm:max-w-[260px]" />
+          <h1 className="login-header text-center">{t("login.title")}</h1>
+          <form className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="login-user" className="text-sm text-neutral-400">
+                {t("login.username")}
+              </label>
+              <input
+                id="login-user"
+                type="text"
+                className="login-input w-full"
+                value={user}
+                onChange={(e) => setUser(e.target.value)}
+                placeholder={t("login.usernamePlaceholder")}
+                autoComplete="username"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="login-pass" className="text-sm text-neutral-400">
+                {t("login.password")}
+              </label>
+              <input
+                id="login-pass"
+                type="password"
+                className="login-input w-full"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("login.passwordPlaceholder")}
+                autoComplete="current-password"
+              />
+            </div>
+            <button
+              type="button"
+              className="mt-2 w-full cursor-pointer rounded-md bg-orange-300 p-4 font-bold text-black hover:bg-orange-400 disabled:opacity-60"
+              onClick={handleLogin}
+              disabled={loading}
+            >
+              {loading ? t("common.loading") : t("login.loginButton")}
+            </button>
+            {errorMessage && <div className="error-message">{errorMessage}</div>}
+          </form>
         </div>
-        <h1 className="login-header">{t('login.title')}</h1>
-        <form className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-          <label htmlFor="" className="text-sm text-neutral-400">{t('login.username')}</label>
-          <input type="text" className="login-input" value={user} onChange={(e) => setUser(e.target.value)} placeholder={t('login.usernamePlaceholder')} />
-          </div>
-          <div className="flex flex-col gap-2">
-          <label htmlFor="" className="text-sm text-neutral-400">{t('login.password')}</label>
-          <input type="password" className="login-input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('login.passwordPlaceholder')} />
-          </div>
-          <button type="button" className="p-4 rounded-md text-black bg-orange-300 font-bold !mt-4 cursor-pointer hover:bg-orange-400" onClick={handleLogin} disabled={loading}>
-            {loading ? t('common.loading') : t('login.loginButton')}
-          </button>
-          {errorMessage && <div className="error-message">{errorMessage}</div>}
-        </form>
       </div>
-      {/*
-      <Bubbles />
-      */}
     </main>
   );
 }

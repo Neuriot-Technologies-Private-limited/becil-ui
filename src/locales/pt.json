@@ -46,7 +46,10 @@
     "continue": "Continuar",
     "language": "Idioma",
     "result": "resultado",
-    "results": "resultados"
+    "results": "resultados",
+    "noMatchingResults": "Nenhum resultado corresponde à sua pesquisa ou filtros.",
+    "noMatchingDescription": "Tente alterar ou limpar a pesquisa e os filtros.",
+    "clearFilters": "Limpar filtros"
   },
   "login": {
     "title": "Login do Usuário",
@@ -80,6 +83,7 @@
     "searchByBrand": "Pesquisar por marca...",
     "searchByAdvertisement": "Pesquisar por anúncio...",
     "noAdsFound": "Nenhum anúncio encontrado",
+    "emptyLibraryHint": "Envie um anúncio para vê-lo nesta lista.",
     "uploadSuccess": "Anúncio enviado com sucesso",
     "uploadError": "Falha ao enviar anúncio"
   },
@@ -93,7 +97,9 @@
     "year": "Ano",
     "searchByArtist": "Pesquisar por artista...",
     "searchByName": "Pesquisar por nome...",
+    "uploadDate": "Data de envio",
     "noSongsFound": "Nenhuma música encontrada",
+    "emptyLibraryHint": "Envie uma música para vê-la nesta lista.",
     "uploadSuccess": "Música enviada com sucesso",
     "uploadError": "Falha ao enviar música"
   },
@@ -106,6 +112,7 @@
     "searchByStation": "Pesquisar por estação...",
     "searchByRecording": "Pesquisar por gravação...",
     "noBroadcastsFound": "Nenhuma transmissão encontrada",
+    "emptyLibraryHint": "Envie uma gravação de transmissão para vê-la nesta lista.",
     "uploadSuccess": "Transmissão enviada com sucesso",
     "uploadError": "Falha ao enviar transmissão",
     "viewWaveform": "Ver Forma de Onda",

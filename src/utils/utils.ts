@@ -1,11 +1,16 @@
-export function formatDuration(seconds: number) {
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
+export function formatDuration(seconds: number | null | undefined) {
+  const n = typeof seconds === "number" ? seconds : Number(seconds);
+  if (!Number.isFinite(n) || n < 0) {
+    return "—";
+  }
+  const total = Math.floor(n);
+  const hrs = Math.floor(total / 3600);
+  const mins = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
 
-  const paddedHrs = String(hrs).padStart(2, '0');
-  const paddedMins = String(mins).padStart(2, '0');
-  const paddedSecs = String(secs).padStart(2, '0');
+  const paddedHrs = String(hrs).padStart(2, "0");
+  const paddedMins = String(mins).padStart(2, "0");
+  const paddedSecs = String(secs).padStart(2, "0");
 
   return `${paddedHrs}:${paddedMins}:${paddedSecs}`;
 }
@@ -49,11 +54,15 @@ export function generateAmplitudes(seedInput: string, duration: number): number[
 
 
 export function formatSecondsToHHMMSS(seconds: number): string {
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return "00:00:00";
+  }
+  const s = Math.floor(seconds);
+  const hrs = Math.floor(s / 3600);
+  const mins = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
 
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, "0");
 
   return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
 }
