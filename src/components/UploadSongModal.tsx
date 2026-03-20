@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
-import { getLastSegment } from "@utils/utils";
+import { getLastSegment } from "@/utils/utils";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
+import { songsService } from "@/api/services";
 import UploadProgressModal from "./UploadProgressModal";
 
 interface UploadSongModalProps {
@@ -11,7 +12,6 @@ interface UploadSongModalProps {
 }
 
 export default function UploadSongModal({ isOpen, onClose, onSongUploaded }: UploadSongModalProps){
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const [artist, setArtist] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState("Active");
@@ -51,7 +51,7 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }: Upl
       const formData = new FormData();
       formData.append("file", file);
 
-      const uploadResult = await uploadWithProgress(`${apiUrl}/songs/upload-audio`, formData, {
+      const uploadResult = await uploadWithProgress(songsService.getUploadAudioUrl(), formData, {
         onSuccess: (data) => {
           setProcessing();
         },
@@ -69,25 +69,13 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }: Upl
       const { url } = uploadResult;
 
       // Step 2: Submit song metadata to FastAPI
-      const songRes = await fetch(`${apiUrl}/songs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          artist,
-          name,
-          duration: duration,
-          filename: getLastSegment(url),
-          status,
-        }),
+      const newSong = await songsService.create({
+        artist,
+        name,
+        duration,
+        filename: getLastSegment(url),
+        status,
       });
-
-      if (!songRes.ok) {
-        const errorText = await songRes.text();
-        console.error("Metadata upload failed:", errorText);
-        throw new Error("Failed to upload song metadata");
-      }
-
-      const newSong = await songRes.json();
       onSongUploaded(newSong);
       setUploadState({ progress: 100, status: "complete" });
       setIsUploading(false);

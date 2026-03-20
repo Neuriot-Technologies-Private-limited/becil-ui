@@ -1,8 +1,9 @@
 import { useState, useRef, type RefObject } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
-import { getLastSegment } from "@utils/utils";
+import { getLastSegment } from "@/utils/utils";
 import { DatePicker } from "./DatePicker";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
+import { adsService } from "@/api/services";
 import UploadProgressModal from "./UploadProgressModal";
 import { useTranslation } from 'react-i18next';
 
@@ -13,7 +14,6 @@ interface UploadAdModalProps {
 }
 
 const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) => {
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const [brand, setBrand] = useState("");
   const [advertisement, setAdvertisement] = useState("");
   const [city, setCity] = useState("");
@@ -84,7 +84,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
       const formData = new FormData();
       formData.append("file", file);
 
-      const uploadResult = await uploadWithProgress(`${apiUrl}/ads/upload-audio`, formData, {
+      const uploadResult = await uploadWithProgress(adsService.getUploadAudioUrl(), formData, {
         onSuccess: (data) => {
           setProcessing();
         },
@@ -102,30 +102,18 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
       const { url } = uploadResult;
 
       // Step 2: Submit ad metadata to FastAPI
-      const adRes = await fetch(`${apiUrl}/ads`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brand,
-          advertisement,
-          duration,
-          filename: getLastSegment(url),
-          status,
-          city,
-          language,
-          category,
-          radio_station: radioStation,
-          creation_date: creationDate.toISOString().split("T")[0]
-        }),
+      const newAd = await adsService.create({
+        brand,
+        advertisement,
+        duration,
+        filename: getLastSegment(url),
+        status,
+        city,
+        language,
+        category,
+        radio_station: radioStation,
+        creation_date: creationDate.toISOString().split("T")[0],
       });
-
-      if (!adRes.ok) {
-        const errorText = await adRes.text();
-        console.error("Metadata upload failed:", errorText);
-        throw new Error("Failed to upload ad metadata");
-      }
-
-      const newAd = await adRes.json();
       onAdUploaded(newAd);
       setUploadState({ progress: 100, status: "complete" });
       setIsUploading(false);

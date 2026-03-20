@@ -1,20 +1,20 @@
-import UploadAdModal from "@components/UploadAdModal";
+import UploadAdModal from "@/components/UploadAdModal";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import "@styles/audioMedia.css";
-import { formatDuration } from "@utils/utils";
-import axios from "axios";
+import "@/styles/audioMedia.css";
+import { formatDuration } from "@/utils/utils";
 import { useEffect, useMemo, useState } from "react";
 import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaChevronUp, FaCloudDownloadAlt, FaMusic, FaSearch, FaTimes } from "react-icons/fa";
 import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
-import MusicControls from "@components/MusicControls";
+import MusicControls from "@/components/MusicControls";
 import { FaCheck, FaChevronDown, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
 import type { AdMaster, CurDurationType } from "@/types";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
-import { Input } from "@components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
-import ListEmptyState from "@components/ListEmptyState";
+import { adsService, audioService } from "@/api/services";
+import ListEmptyState from "@/components/ListEmptyState";
 
 type SortKey = keyof AdMaster;
 type AdStatus = "Active" | "Inactive";
@@ -67,18 +67,16 @@ export default function AdMasters() {
     setSortConfig({ key, direction });
   };
 
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
 
   useEffect(() => {
     setActiveLink(1);
     const fetchAds = async () => {
       try {
-        const params = new URLSearchParams();
-        if (brandSearch) params.append("brand", brandSearch);
-        if (advertisementSearch) params.append("advertisement", advertisementSearch);
-        const response = await axios.get(`${apiUrl}/ads?${params.toString()}`);
-        const raw = response.data;
+        const params: { brand?: string; advertisement?: string } = {};
+        if (brandSearch) params.brand = brandSearch;
+        if (advertisementSearch) params.advertisement = advertisementSearch;
+        const raw = await adsService.list(params);
         setAds(Array.isArray(raw) ? raw : []);
       } catch (error) {
         console.error("Error fetching ads:", error);
@@ -95,7 +93,7 @@ export default function AdMasters() {
     return () => {
       clearTimeout(handler);
     };
-  }, [brandSearch, advertisementSearch, apiUrl]);
+  }, [brandSearch, advertisementSearch]);
 
   async function handleMusic(ad: AdMaster) {
     if (buttonLoading.id !== -1) {
@@ -103,10 +101,7 @@ export default function AdMasters() {
     }
     try {
       setButtonLoading({ id: ad.id, type: "Music" });
-      const res = await fetch(`${apiUrl}/audio/ads/${ad.filename}`);
-      if (!res.ok) throw new Error("Failed to fetch audio");
-
-      const blob = await res.blob();
+      const blob = await audioService.getBlob("ads", ad.filename);
       const audioUrl = URL.createObjectURL(blob);
       setSrc(audioUrl);
       setMetadata(ad);
@@ -124,10 +119,7 @@ export default function AdMasters() {
     }
     try {
       setButtonLoading({ id: ad.id, type: "Download" });
-      const res = await fetch(`${apiUrl}/audio/ads/${ad.filename}`);
-      if (!res.ok) throw new Error("Failed to fetch audio");
-
-      const blob = await res.blob();
+      const blob = await audioService.getBlob("ads", ad.filename);
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");
@@ -147,24 +139,7 @@ export default function AdMasters() {
     const newStatus = status === "Active" ? "Inactive" : "Active";
 
     try {
-      const res = await fetch(`${apiUrl}/ads/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id,
-          status: newStatus,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Failed to update status:", errorText);
-        throw new Error("Status update failed");
-      }
-
-      const updatedAd = await res.json();
+      const updatedAd = await adsService.updateStatus(id, newStatus);
       setAds((prev: AdMaster[]) => prev.map((item: AdMaster) => (item.id === updatedAd.id ? updatedAd : item)));
       console.log("Status updated successfully:", updatedAd);
     } catch (err) {

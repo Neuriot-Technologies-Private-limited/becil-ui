@@ -1,6 +1,6 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { AdDetectionResult, Broadcast, CurDurationType } from "@/types";
-import { formatSecondsToHHMMSS } from "@utils/utils";
+import { formatSecondsToHHMMSS } from "@/utils/utils";
 import { useEffect, useRef, useState } from "react";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
@@ -8,6 +8,7 @@ import { FaMusic, FaPause, FaPlay, FaXmark } from "react-icons/fa6";
 import Waveform from "./Waveform";
 import { toast } from "sonner";
 import CustomToast from "./CustomToast";
+import { broadcastsService, audioService } from "@/api/services";
 import { PuffLoader } from "react-spinners";
 
 type WaveformModalProps = {
@@ -25,7 +26,6 @@ export default function WaveformModal({ isOpen, onClose, broadcast, waveformData
   const [selectedRegion, setSelectedRegion] = useState<AdDetectionResult | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const apiUrl = import.meta.env["VITE_API_URL"];
 
   const [brandArtist, setBrandArtist] = useState("");
   const [advertisementName, setAdvertisementName] = useState("");
@@ -61,25 +61,15 @@ export default function WaveformModal({ isOpen, onClose, broadcast, waveformData
     e.preventDefault();
     setButtonLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/broadcasts/${broadcast.id}/designate_clip`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brand_artist: brandArtist,
-          advertisement_name: advertisementName,
-          start_time: startTime,
-          end_time: endTime,
-          clip_type: type,
-        }),
+      await broadcastsService.designateClip(broadcast.id, {
+        brand_artist: brandArtist,
+        advertisement_name: advertisementName,
+        start_time: startTime,
+        end_time: endTime,
+        clip_type: type,
       });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Metadata upload failed:", errorText);
-      } else {
-        toast.custom(() => <CustomToast status="Extraction has started for the new clip." />);
-        setSelectedRegion(null)
-      }
+      toast.custom(() => <CustomToast status="Extraction has started for the new clip." />);
+      setSelectedRegion(null);
     } catch (err) {
       console.error(err);
     } finally {
@@ -110,12 +100,10 @@ export default function WaveformModal({ isOpen, onClose, broadcast, waveformData
     async function fetchAudio() {
       setIsAudioLoading(true);
       try {
-        const res = await fetch(`${apiUrl}/audio/broadcasts/${broadcast.filename}`);
-        if (!res.ok) throw new Error("Failed to fetch audio");
-        const blob = await res.blob();
+        const blob = await audioService.getBlob("broadcasts", broadcast.filename);
         const audioUrl = URL.createObjectURL(blob);
         setSrc(audioUrl);
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error(e);
       } finally {
         setIsAudioLoading(false);
@@ -124,7 +112,7 @@ export default function WaveformModal({ isOpen, onClose, broadcast, waveformData
     if (isOpen) {
       fetchAudio();
     }
-  }, [broadcast.id, broadcast.filename, apiUrl, isOpen]);
+  }, [broadcast.id, broadcast.filename, isOpen]);
 
   function handleSlider(e: number[]) {
     const st = e[0],

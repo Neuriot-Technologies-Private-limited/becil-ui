@@ -40,3 +40,11 @@ curl -s http://localhost:8000/api/health | python3 -m json.tool
 
 - `ok: true` — database OK.
 - `uploads_ready: true` — S3 is configured; **upload** from the app should work. If false, fix backend `.env` (see `becil-audio-bkend/README.md`).
+
+## Deploy to AWS Amplify
+
+1. Connect your repo to Amplify and set the app root to `becil-audio` (or where this project lives).
+2. **Required:** Add `VITE_API_URL` in Amplify Console → App settings → Environment variables:
+   - Key: `VITE_API_URL`
+   - Value: `https://your-backend-api.com/api` (your real backend URL, no trailing slash)
+3. Redeploy. Without this variable, API calls go to `/undefined/...` and fail.

@@ -3,10 +3,10 @@ import { toast } from "sonner";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { FaPlay } from "react-icons/fa";
-import MusicControls from "@components/MusicControls";
+import MusicControls from "@/components/MusicControls";
 import { GiDiamonds } from "react-icons/gi";
-import UploadBroadcastModal from "@components/UploadBroadcastModal";
-import UploadProgressModal from "@components/UploadProgressModal";
+import UploadBroadcastModal from "@/components/UploadBroadcastModal";
+import UploadProgressModal from "@/components/UploadProgressModal";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
 import {
   FaAngleDoubleLeft,
@@ -22,24 +22,24 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
-import WaveformModal from "@components/WaveformModal";
-import { formatDuration, getLastSegment } from "@utils/utils";
-import "@styles/audioMedia.css";
+import WaveformModal from "@/components/WaveformModal";
+import { formatDuration, getLastSegment } from "@/utils/utils";
+import "@/styles/audioMedia.css";
 import { useOutletContext } from "react-router";
 import type { CurDurationType, AdDetectionResult, Broadcast } from "@/types";
 import { PuffLoader } from "react-spinners";
 import { FaPlus } from "react-icons/fa6";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
-import { Input } from "@components/ui/input";
-import CustomToast from "@components/CustomToast";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import CustomToast from "@/components/CustomToast";
 import { useTranslation } from "react-i18next";
-import ListEmptyState from "@components/ListEmptyState";
+import { broadcastsService, audioService } from "@/api/services";
+import ListEmptyState from "@/components/ListEmptyState";
 
 type SortKey = keyof Broadcast;
 type BroadcastStatus = "Processed" | "Processing" | "Pending";
 
 export default function Broadcasts() {
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const [broadcasts, setBroadcasts] = useState<Broadcast[] | null>(null);
   
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -96,14 +96,10 @@ export default function Broadcasts() {
     setActiveLink(3);
     const fetchBroadcasts = async () => {
       try {
-        const params = new URLSearchParams();
-        if (stationSearch) params.append("radio_station", stationSearch);
-        if (recordingSearch) params.append("broadcast_recording", recordingSearch);
-        const response = await fetch(`${apiUrl}/broadcasts?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch broadcasts");
-        }
-        const data = await response.json();
+        const params: { radio_station?: string; broadcast_recording?: string } = {};
+        if (stationSearch) params.radio_station = stationSearch;
+        if (recordingSearch) params.broadcast_recording = recordingSearch;
+        const data = await broadcastsService.list(params);
         setBroadcasts(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching broadcasts:", error);
@@ -118,15 +114,14 @@ export default function Broadcasts() {
     return () => {
       clearTimeout(handler);
     };
-  }, [stationSearch, recordingSearch, apiUrl, setActiveLink]);
+  }, [stationSearch, recordingSearch, setActiveLink]);
 
 
 
   async function handleWaveformClick(broadcast: Broadcast) {
     setSelectedBroadcast(broadcast);
     try {
-      const res = await fetch(`${apiUrl}/broadcasts/${broadcast.id}/detections`);
-      const data = await res.json();
+      const data = await broadcastsService.getDetections(broadcast.id);
       setWaveformData({ broadcast_id: broadcast.id, data });
       setWaveformModalOpen(true);
     } catch (er) {
@@ -142,10 +137,7 @@ export default function Broadcasts() {
     }
     try {
       setButtonLoading({ id: brd.id, type: "Download" });
-      const res = await fetch(`${apiUrl}/audio/broadcasts/${brd.filename}`);
-      if (!res.ok) throw new Error("Failed to fetch audio");
-
-      const blob = await res.blob();
+      const blob = await audioService.getBlob("broadcasts", brd.filename);
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");
@@ -164,22 +156,10 @@ export default function Broadcasts() {
   async function handleProcessingStart(id: number) {
     try {
       setDisabledButtons((prev) => [...prev, id]);
-      const res = await fetch(`${apiUrl}/broadcasts/start-processing`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          broadcast_id: id,
-        }),
-      });
-      if (res.status == 200) {
-        setDisabledButtons((prev) => prev.filter((i) => i != id));
-        const response = await fetch(`${apiUrl}/broadcasts`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch broadcasts");
-        }
-        const data = await response.json();
-        setBroadcasts(Array.isArray(data) ? data : []);
-      }
+      await broadcastsService.startProcessing(id);
+      setDisabledButtons((prev) => prev.filter((i) => i != id));
+      const data = await broadcastsService.list();
+      setBroadcasts(Array.isArray(data) ? data : []);
     } catch (e) {
       console.log(e);
     }
@@ -191,10 +171,7 @@ export default function Broadcasts() {
     }
     try {
       setButtonLoading({ id: broadcast.id, type: "Report" });
-      const res = await fetch(`${apiUrl}/broadcasts/${broadcast.id}/report`);
-      if (!res.ok) throw new Error("Failed to fetch report");
-
-      const blob = await res.blob();
+      const blob = await broadcastsService.getReport(broadcast.id);
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");

@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
-import { getLastSegment } from "@utils/utils";
+import { getLastSegment } from "@/utils/utils";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
+import { broadcastsService } from "@/api/services";
 import UploadProgressModal from "./UploadProgressModal";
 
 interface UploadBroadcastModalProps {
@@ -11,7 +12,6 @@ interface UploadBroadcastModalProps {
 }
 
 export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploaded }: UploadBroadcastModalProps) {
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const [radioStation, setRadioStation] = useState("");
   const [recordingName, setRecordingName] = useState("");
   const [city, setCity] = useState("")
@@ -61,17 +61,14 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
 
     try {
       // Get audio duration using HTMLAudioElement
-      const getDuration = (file) => {
-        return new Promise((resolve, reject) => {
+      const getDuration = (f: File): Promise<number> =>
+        new Promise((resolve, reject) => {
           const audio = document.createElement("audio");
           audio.preload = "metadata";
-          audio.onloadedmetadata = () => {
-            resolve(Math.floor(audio.duration));
-          };
+          audio.onloadedmetadata = () => resolve(Math.floor(audio.duration));
           audio.onerror = reject;
-          audio.src = URL.createObjectURL(file);
+          audio.src = URL.createObjectURL(f);
         });
-      };
 
       const duration = await getDuration(file);
 
@@ -79,8 +76,8 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
       const formData = new FormData();
       formData.append("file", file);
 
-      const uploadResult = await uploadWithProgress(`${apiUrl}/broadcasts/upload-audio`, formData, {
-        onSuccess: (data) => {
+      const uploadResult = await uploadWithProgress(broadcastsService.getUploadAudioUrl(), formData, {
+        onSuccess: () => {
           setProcessing();
         },
         onError: (error) => {
@@ -97,27 +94,15 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
       const { url } = uploadResult;
 
       // Step 2: Submit broadcast metadata to FastAPI
-      const broadcastRes = await fetch(`${apiUrl}/broadcasts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          radio_station: radioStation,
-          broadcast_recording: recordingName,
-          filename: getLastSegment(url),
-          duration: duration,
-          city,
-          language,
-          status: "Pending",
-        }),
+      const newBroadcast = await broadcastsService.create({
+        radio_station: radioStation,
+        broadcast_recording: recordingName,
+        filename: getLastSegment(url),
+        duration,
+        city,
+        language,
+        status: "Pending",
       });
-
-      if (!broadcastRes.ok) {
-        const errorText = await broadcastRes.text();
-        console.error("Metadata upload failed:", errorText);
-        throw new Error("Failed to upload broadcast metadata");
-      }
-
-      const newBroadcast = await broadcastRes.json();
       onBroadcastUploaded(newBroadcast);
       setUploadState({ progress: 100, status: "complete" });
       setIsUploading(false);

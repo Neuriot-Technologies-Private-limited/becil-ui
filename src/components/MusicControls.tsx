@@ -1,4 +1,4 @@
-import { formatSecondsToHHMMSS } from "@utils/utils";
+import { formatSecondsToHHMMSS } from "@/utils/utils";
 import { useEffect, useRef, useState } from "react";
 import { FaPlay, FaPause } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";

@@ -1,20 +1,20 @@
 import UploadSongModal from "@/components/UploadSongModal";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import "@styles/audioMedia.css";
-import { formatDuration } from "@utils/utils";
-import axios from "axios";
+import "@/styles/audioMedia.css";
+import { formatDuration } from "@/utils/utils";
 import { useEffect, useMemo, useState } from "react";
 import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCloudDownloadAlt, FaMusic, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
-import MusicControls from "@components/MusicControls";
+import MusicControls from "@/components/MusicControls";
 import { FaCheck, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
 import type { CurDurationType, SongMaster } from "@/types";
-import { Input } from "@components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
-import ListEmptyState from "@components/ListEmptyState";
+import { songsService, audioService } from "@/api/services";
+import ListEmptyState from "@/components/ListEmptyState";
 
 type SortKey = keyof SongMaster;
 type SongStatus = "Active" | "Inactive";
@@ -38,7 +38,6 @@ export default function SongMasters() {
   const [artistSearch, setArtistSearch] = useState("");
   const [nameSearch, setNameSearch] = useState("");
 
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const { setActiveLink } = useOutletContext<{ setActiveLink: (arg0: number) => null }>();
   const { t } = useTranslation();
 
@@ -87,8 +86,7 @@ export default function SongMasters() {
     setActiveLink(2);
     const fetchSongs = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/songs`);
-        const raw = response.data;
+        const raw = await songsService.list();
         setSongs(Array.isArray(raw) ? raw : []);
       } catch (error) {
         console.error("Error fetching songs:", error);
@@ -97,7 +95,7 @@ export default function SongMasters() {
     };
 
     fetchSongs();
-  }, [apiUrl, setActiveLink]);
+  }, [setActiveLink]);
 
   async function handleMusic(song: SongMaster) {
     if (buttonLoading.id !== -1) {
@@ -105,10 +103,7 @@ export default function SongMasters() {
     }
     try {
       setButtonLoading({ id: song.id, type: "Music" });
-      const res = await fetch(`${apiUrl}/audio/songs/${song.filename}`);
-      if (!res.ok) throw new Error("Failed to fetch audio");
-
-      const blob = await res.blob();
+      const blob = await audioService.getBlob("songs", song.filename);
       const audioUrl = URL.createObjectURL(blob);
       setSrc(audioUrl);
       setMetadata(song);
@@ -126,10 +121,7 @@ export default function SongMasters() {
     }
     try {
       setButtonLoading({ id: song.id, type: "Download" });
-      const res = await fetch(`${apiUrl}/audio/songs/${song.filename}`);
-      if (!res.ok) throw new Error("Failed to fetch audio");
-
-      const blob = await res.blob();
+      const blob = await audioService.getBlob("songs", song.filename);
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");
@@ -149,24 +141,7 @@ export default function SongMasters() {
     const newStatus = status === "Active" ? "Inactive" : "Active";
 
     try {
-      const res = await fetch(`${apiUrl}/songs/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id,
-          status: newStatus,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Failed to update status:", errorText);
-        throw new Error("Status update failed");
-      }
-
-      const updatedSong = await res.json();
+      const updatedSong = await songsService.updateStatus(id, newStatus);
       setSongs((prev: SongMaster[]) => prev.map((item) => (item.id === updatedSong.id ? updatedSong : item)));
       console.log("Status updated successfully:", updatedSong);
     } catch (err) {

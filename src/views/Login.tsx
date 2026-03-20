@@ -1,12 +1,11 @@
 import { useState } from "react";
-import "@styles/login.css";
-import axios from "axios";
+import "@/styles/login.css";
+import { authService } from "@/api/services";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '@components/LanguageSwitcher';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function Login() {
-  const apiUrl = import.meta.env["VITE_API_URL"];
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,20 +20,12 @@ export default function Login() {
     setLoading(true);
     setErrorMessage("");
     try {
-      const response = await axios.post(
-        `${apiUrl}/users/login`,
-        // {
-        //   userId:userID.toLowerCase(),
-        //   password,
-        // }
-        {
-          userId: "simardeep.singh@neuriot.com",
-          password: "Password@123",
-        }
-      );
-      console.log("response", response);
-      localStorage.setItem("token", response.data.data.token);
-      localStorage.setItem("userDetails", JSON.stringify(response.data.data.user));
+      const data = await authService.login({
+        userId: user || "simardeep.singh@neuriot.com",
+        password: password || "Password@123",
+      });
+      if (data?.token) localStorage.setItem("token", data.token);
+      if (data?.user) localStorage.setItem("userDetails", JSON.stringify(data.user));
       navigate("/admasters");
     } catch (error) {
       console.error(error);

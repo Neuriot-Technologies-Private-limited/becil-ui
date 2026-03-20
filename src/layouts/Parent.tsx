@@ -9,7 +9,7 @@ import { PiGear } from "react-icons/pi";
 import { GoTriangleLeft, GoTriangleRight } from "react-icons/go";
 import { HiOutlineExternalLink } from "react-icons/hi";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "@components/LanguageSwitcher";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 /** Same asset as `<link rel="icon">` — used as collapsed sidebar mark */
 const APP_FAVICON = "/favicon.jpg";

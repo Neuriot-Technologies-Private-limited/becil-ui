@@ -1,9 +1,9 @@
-import { formatSecondsToHHMMSS, getRandomHex, generateAmplitudes, deterministicRandomFromList } from "@utils/utils";
+import { formatSecondsToHHMMSS, getRandomHex, generateAmplitudes, deterministicRandomFromList } from "@/utils/utils";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Tooltip } from "react-tooltip";
 import { emptyAdSlot } from "@/data";
 import type { AdDetectionResult } from "@/types";
-import { Slider } from "@components/ui/slider";
+import { Slider } from "@/components/ui/slider";
 
 type WaveformProps = {
   duration: number;
