@@ -1,9 +1,8 @@
 import { useState, useRef, type RefObject } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
-import { getLastSegment } from "@/utils/utils";
 import { DatePicker } from "./DatePicker";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
-import { adsService } from "@/api/services";
+import { adsService, uploadsService } from "@/api/services";
 import UploadProgressModal from "./UploadProgressModal";
 import { useTranslation } from 'react-i18next';
 
@@ -27,7 +26,7 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
   const [isUploading, setIsUploading] = useState(false);
   const { t } = useTranslation();
   
-  const { uploadState, uploadWithProgress, uploadMultipleFiles, setProcessing, resetUpload, setUploadState } = useUploadProgress();
+  const { uploadState, resetUpload, setUploadState } = useUploadProgress();
 
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement>>({
     advertisement: null,
@@ -80,33 +79,33 @@ const UploadAdModal = ({ isOpen, onClose, onAdUploaded }: UploadAdModalProps) =>
       const file = files[0];
       const duration = await getDuration(file);
 
-      // Step 1: Upload the file to S3 via FastAPI with progress
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResult = await uploadWithProgress(adsService.getUploadAudioUrl(), formData, {
-        onSuccess: (data) => {
-          setProcessing();
-        },
-        onError: (error) => {
-          console.error("Audio upload failed:", error);
-          setShowProgress(false);
-          setIsUploading(false);
-        },
-        onProgress: (progress, message) => {
-          console.log(`Progress: ${progress}% - ${message}`);
-        },
-        timeout: 180000 // 3 minutes timeout
+      // Step 1: Get pre-signed upload URL
+      const presign = await uploadsService.presign({
+        filename: file.name,
+        upload_type: "ads",
+        content_type: file.type || "audio/mpeg",
       });
-      
-      const { url } = uploadResult;
+
+      // Step 2: Upload directly to S3
+      setUploadState({ progress: 0, status: "uploading", message: "Uploading to S3..." });
+      await uploadsService.uploadToS3(presign.upload_url, file, (progress) => {
+        setUploadState({
+          progress,
+          status: "uploading",
+          message: `Uploading... ${progress}%`,
+        });
+      });
+
+      // Step 3: Ask backend to verify uploaded object
+      setUploadState({ progress: 100, status: "processing", message: "Verifying upload..." });
+      await uploadsService.complete(presign.file_key);
 
       // Step 2: Submit ad metadata to FastAPI
       const newAd = await adsService.create({
         brand,
         advertisement,
         duration,
-        filename: getLastSegment(url),
+        filename: presign.file_key.split("/").pop() ?? file.name,
         status,
         city,
         language,

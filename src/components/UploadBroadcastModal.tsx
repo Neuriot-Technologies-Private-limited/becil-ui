@@ -1,8 +1,7 @@
 import { useRef, useState } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
-import { getLastSegment } from "@/utils/utils";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
-import { broadcastsService } from "@/api/services";
+import { broadcastsService, uploadsService } from "@/api/services";
 import UploadProgressModal from "./UploadProgressModal";
 
 interface UploadBroadcastModalProps {
@@ -20,7 +19,7 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
   const [showProgress, setShowProgress] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   
-  const { uploadState, uploadWithProgress, setProcessing, resetUpload, setUploadState } = useUploadProgress();
+  const { uploadState, resetUpload, setUploadState } = useUploadProgress();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement>>({
@@ -72,32 +71,32 @@ export default function UploadBroadcastModal({ isOpen, onClose, onBroadcastUploa
 
       const duration = await getDuration(file);
 
-      // Step 1: Upload the file to S3 via FastAPI with progress
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResult = await uploadWithProgress(broadcastsService.getUploadAudioUrl(), formData, {
-        onSuccess: () => {
-          setProcessing();
-        },
-        onError: (error) => {
-          console.error("Audio upload failed:", error);
-          setShowProgress(false);
-          setIsUploading(false);
-        },
-        onProgress: (progress, message) => {
-          console.log(`Progress: ${progress}% - ${message}`);
-        },
-        timeout: file.size > 100 * 1024 * 1024 ? 900000 : file.size > 50 * 1024 * 1024 ? 600000 : 300000 // Dynamic timeout based on file size
+      // Step 1: Get pre-signed upload URL
+      const presign = await uploadsService.presign({
+        filename: file.name,
+        upload_type: "broadcasts",
+        content_type: file.type || "audio/mpeg",
       });
-      
-      const { url } = uploadResult;
+
+      // Step 2: Upload directly to S3
+      setUploadState({ progress: 0, status: "uploading", message: "Uploading to S3..." });
+      await uploadsService.uploadToS3(presign.upload_url, file, (progress) => {
+        setUploadState({
+          progress,
+          status: "uploading",
+          message: `Uploading... ${progress}%`,
+        });
+      });
+
+      // Step 3: Ask backend to verify uploaded object
+      setUploadState({ progress: 100, status: "processing", message: "Verifying upload..." });
+      await uploadsService.complete(presign.file_key);
 
       // Step 2: Submit broadcast metadata to FastAPI
       const newBroadcast = await broadcastsService.create({
         radio_station: radioStation,
         broadcast_recording: recordingName,
-        filename: getLastSegment(url),
+        filename: presign.file_key.split("/").pop() ?? file.name,
         duration,
         city,
         language,

@@ -1,32 +1,24 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { FaPlay } from "react-icons/fa";
-import MusicControls from "@/components/MusicControls";
 import { GiDiamonds } from "react-icons/gi";
 import UploadBroadcastModal from "@/components/UploadBroadcastModal";
-import UploadProgressModal from "@/components/UploadProgressModal";
-import { useUploadProgress } from "@/hooks/useUploadProgress";
 import {
-  FaAngleDoubleLeft,
-  FaAngleDoubleRight,
-  FaAngleLeft,
-  FaAngleRight,
   FaChevronDown,
   FaChevronUp,
   FaCloudDownloadAlt,
-  FaFilter,
-  FaMusic,
   FaRegFileAlt,
   FaSearch,
+  FaRedoAlt,
+  FaTrash,
 } from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
 import WaveformModal from "@/components/WaveformModal";
-import { formatDuration, getLastSegment } from "@/utils/utils";
+import { formatDuration } from "@/utils/utils";
 import "@/styles/audioMedia.css";
 import { useOutletContext } from "react-router";
-import type { CurDurationType, AdDetectionResult, Broadcast } from "@/types";
+import type { AdDetectionResult, Broadcast } from "@/types";
 import { PuffLoader } from "react-spinners";
 import { FaPlus } from "react-icons/fa6";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -60,7 +52,6 @@ export default function Broadcasts() {
   const [stationSearch, setStationSearch] = useState("");
   const [recordingSearch, setRecordingSearch] = useState("");
 
-  const toastRef = useRef(null);
   const { t } = useTranslation();
 
   const filteredAndSortedBroadcasts = useMemo(() => {
@@ -165,13 +156,13 @@ export default function Broadcasts() {
     }
   }
 
-  async function handleReport(broadcast: Broadcast) {
+  async function handleReport(broadcast: Broadcast, forceRegenerate = false) {
     if (buttonLoading.id !== -1) {
       return;
     }
     try {
-      setButtonLoading({ id: broadcast.id, type: "Report" });
-      const blob = await broadcastsService.getReport(broadcast.id);
+      setButtonLoading({ id: broadcast.id, type: forceRegenerate ? "RegenerateReport" : "Report" });
+      const blob = await broadcastsService.getReport(broadcast.id, forceRegenerate);
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");
@@ -183,7 +174,25 @@ export default function Broadcasts() {
     } catch (err) {
       console.error("Error downloading report:", err);
     } finally {
-      setButtonLoading({ id: -1, type: "Report" });
+      setButtonLoading({ id: -1, type: "Music" });
+    }
+  }
+
+  async function handleDelete(broadcast: Broadcast) {
+    const ok = window.confirm(`Delete "${broadcast.broadcast_recording}"? This removes DB + S3 data.`);
+    if (!ok) return;
+    try {
+      setButtonLoading({ id: broadcast.id, type: "Delete" });
+      await broadcastsService.remove(broadcast.id);
+      setBroadcasts((prev) => (prev ? prev.filter((item) => item.id !== broadcast.id) : prev));
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 404) toast.custom(() => <CustomToast status="Broadcast already deleted or not found." />);
+      else if (status === 502) toast.custom(() => <CustomToast status="S3 delete failed. Please retry." />);
+      else if (status === 500) toast.custom(() => <CustomToast status="Cleanup failed on server. Contact support." />);
+      else toast.custom(() => <CustomToast status="Failed to delete broadcast." />);
+    } finally {
+      setButtonLoading({ id: -1, type: "Music" });
     }
   }
 
@@ -368,11 +377,32 @@ export default function Broadcasts() {
                         <button
                           type="button"
                           className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
+                          title="Regenerate report"
+                          disabled={row.status !== "Processed"}
+                          onClick={() => handleReport(row, true)}
+                        >
+                          {buttonLoading.id === row.id && buttonLoading.type === "RegenerateReport" ? (
+                            <PuffLoader color="white" size={15} />
+                          ) : (
+                            <FaRedoAlt size={14} />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
                           title={t('broadcasts.detectionResults')}
                           disabled={row.status !== "Processed"}
                           onClick={() => handleReport(row)}
                         >
                           {buttonLoading.id === row.id && buttonLoading.type === "Report" ? <PuffLoader color="white" size={15} /> : <FaRegFileAlt size={14} />}
+                        </button>
+                        <button
+                          type="button"
+                          className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-red-300 shrink-0 disabled:cursor-default"
+                          title="Delete"
+                          onClick={() => handleDelete(row)}
+                        >
+                          {buttonLoading.id === row.id && buttonLoading.type === "Delete" ? <PuffLoader color="white" size={15} /> : <FaTrash size={14} />}
                         </button>
                       </div>
                     </div>

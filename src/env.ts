@@ -8,7 +8,7 @@
 export function getApiUrl(): string {
   const apiUrl = import.meta.env.VITE_API_URL?.trim()?.replace(/\/$/, "");
   if (apiUrl) return apiUrl;
-  if (import.meta.env.DEV) return "http://localhost:8000/api";
+  if (import.meta.env.DEV) return "https://34.215.135.224:8443/api";
 
   console.error("[BECIL] VITE_API_URL is not set.");
   return "";

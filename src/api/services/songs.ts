@@ -1,4 +1,4 @@
-import { api, getBaseUrl } from "../api";
+import { api } from "../api";
 import type { SongMaster } from "@/types";
 
 export interface SongCreatePayload {
@@ -17,5 +17,5 @@ export const songsService = {
   updateStatus: (id: number, status: string) =>
     api.put<SongMaster>("/songs/status", { id, status }).then((r) => r.data),
 
-  getUploadAudioUrl: () => `${getBaseUrl()}/songs/upload-audio`,
+  remove: (id: number) => api.delete(`/songs/${id}`).then((r) => r.data),
 };

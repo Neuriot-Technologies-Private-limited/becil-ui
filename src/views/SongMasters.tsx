@@ -8,7 +8,7 @@ import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaClo
 import { PuffLoader } from "react-spinners";
 import { useOutletContext } from "react-router";
 import MusicControls from "@/components/MusicControls";
-import { FaCheck, FaPlay, FaPlus, FaXmark } from "react-icons/fa6";
+import { FaCheck, FaPlay, FaPlus, FaTrash, FaXmark } from "react-icons/fa6";
 import type { CurDurationType, SongMaster } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -150,6 +150,28 @@ export default function SongMasters() {
     }
   }
 
+  async function handleDelete(song: SongMaster) {
+    const ok = window.confirm(`Delete "${song.name}"? This removes DB + S3 data.`);
+    if (!ok) return;
+    try {
+      setButtonLoading({ id: song.id, type: "Delete" });
+      await songsService.remove(song.id);
+      setSongs((prev) => (prev ? prev.filter((item) => item.id !== song.id) : prev));
+      if (playingSongId === song.id) {
+        setSrc("");
+        setPlayingSongId(-1);
+      }
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 404) alert("Song already deleted or not found.");
+      else if (status === 502) alert("S3 delete failed. Please retry.");
+      else if (status === 500) alert("Cleanup failed on server. Please contact support.");
+      else alert("Failed to delete song.");
+    } finally {
+      setButtonLoading({ id: -1, type: "Music" });
+    }
+  }
+
   const SortableHeader = ({ sortKey, children, className }: { sortKey: SortKey; children: React.ReactNode; className?: string }) => (
     <div className={`flex items-center gap-2 ${className}`}>
       <button type="button" onClick={() => requestSort(sortKey)} className="flex items-center gap-2">
@@ -239,12 +261,12 @@ export default function SongMasters() {
             )
           ) : (
             <div className="scroll-table flex max-h-[min(80vh,720px)] w-full flex-col overflow-auto rounded-lg">
-              <div className="min-w-[56rem]">
+              <div className="min-w-[60rem]">
               <div className="sticky top-0 z-30 flex min-h-16 items-center border border-orange-300 bg-[var(--bg-color)] font-bold text-neutral-200 rounded-t-xl">
                 <div className="w-[15%] shrink-0 pl-3 sm:pl-4">
                   <SortableHeader sortKey="artist">{t("songMasters.artist")}</SortableHeader>
                 </div>
-                <div className="w-[35%] shrink-0 pr-2">
+                <div className="w-[33%] shrink-0 pr-2">
                   <SortableHeader sortKey="name">{t("songMasters.name")}</SortableHeader>
                 </div>
                 <div className="w-[15%] shrink-0 text-center">
@@ -257,7 +279,7 @@ export default function SongMasters() {
                     {t("songMasters.uploadDate")}
                   </SortableHeader>
                 </div>
-                <div className="flex w-[15%] shrink-0 justify-center">
+                <div className="flex w-[12%] shrink-0 justify-center">
                   <Select onValueChange={(value: SongStatus | "all") => setStatusFilter(value)} value={statusFilter}>
                     <SelectTrigger className="w-fit border-none bg-transparent">
                       <p className="chevron-brother">{t("common.status")}</p>
@@ -269,21 +291,21 @@ export default function SongMasters() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="w-[10%] shrink-0" />
+                <div className="w-[15%] shrink-0" />
               </div>
               <div className="flex flex-col text-white">
                 {filteredAndSortedSongs.map((row, idx) => (
                   <div
                     key={idx}
                     className={
-                      "flex min-w-[56rem] items-center py-3 sm:py-4 " +
+                      "flex min-w-[60rem] items-center py-3 sm:py-4 " +
                       (playingSongId === row.id ? "music-bg" : "odd:bg-neutral-800 bg-neutral-900")
                     }
                   >
                     <div className="w-[15%] shrink-0 truncate pl-3 sm:pl-4" title={row.artist}>
                       {row.artist}
                     </div>
-                    <div className="w-[35%] shrink-0 truncate pr-2" title={row.name}>
+                    <div className="w-[33%] shrink-0 truncate pr-2" title={row.name}>
                       {row.name}
                     </div>
                     <div className="w-[15%] shrink-0 text-center text-sm sm:text-base">{formatDuration(row.duration)}</div>
@@ -300,10 +322,10 @@ export default function SongMasters() {
                         : "No Date"
                       }
                     </div>
-                    <div className={"w-[15%] shrink-0 text-center text-sm sm:text-base" + (row.status === "Active" ? " text-green-300" : " text-red-300")}>
+                    <div className={"w-[12%] shrink-0 text-center text-sm sm:text-base" + (row.status === "Active" ? " text-green-300" : " text-red-300")}>
                       {row.status === "Active" ? t("common.active") : t("common.inactive")}
                     </div>
-                    <div className="flex w-[10%] shrink-0 justify-end gap-1 pr-2 sm:gap-2 sm:pr-4">
+                    <div className="flex w-[15%] shrink-0 justify-end gap-1.5 pr-2 sm:gap-2 sm:pr-4">
                       <button
                         type="button"
                         className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer shrink-0 disabled:cursor-default"
@@ -338,6 +360,18 @@ export default function SongMasters() {
                         onClick={() => handleStatusUpdate(row.id, row.status as "Active" | "Inactive")}
                       >
                         {row.status === "Active" ? <FaXmark size={16} /> : <FaCheck size={14} />}
+                      </button>
+                      <button
+                        type="button"
+                        className="h-10 w-8 flex items-center justify-center disabled:hover:bg-transparent hover:bg-orange-300 rounded-xl cursor-pointer disabled:text-gray-400 shrink-0 disabled:cursor-default"
+                        title="Delete"
+                        onClick={() => handleDelete(row)}
+                      >
+                        {buttonLoading.id === row.id && buttonLoading.type === "Delete" ? (
+                          <PuffLoader color="white" size={12} />
+                        ) : (
+                          <FaTrash size={14} />
+                        )}
                       </button>
                     </div>
                   </div>

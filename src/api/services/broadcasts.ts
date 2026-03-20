@@ -1,4 +1,4 @@
-import { api, getBaseUrl } from "../api";
+import { api } from "../api";
 import type { AdDetectionResult, Broadcast } from "@/types";
 
 export interface BroadcastCreatePayload {
@@ -32,11 +32,16 @@ export const broadcastsService = {
   startProcessing: (broadcastId: number) =>
     api.post("/broadcasts/start-processing", { broadcast_id: broadcastId }).then((r) => r.data),
 
-  getReport: (broadcastId: number) =>
-    api.get(`/broadcasts/${broadcastId}/report`, { responseType: "blob" }).then((r) => r.data),
+  getReport: (broadcastId: number, forceRegenerate = false) =>
+    api
+      .get(`/broadcasts/${broadcastId}/report`, {
+        responseType: "blob",
+        params: forceRegenerate ? { force_regenerate: true } : undefined,
+      })
+      .then((r) => r.data),
 
   designateClip: (broadcastId: number, payload: DesignateClipPayload) =>
     api.post(`/broadcasts/${broadcastId}/designate_clip`, payload).then((r) => r.data),
 
-  getUploadAudioUrl: () => `${getBaseUrl()}/broadcasts/upload-audio`,
+  remove: (id: number) => api.delete(`/broadcasts/${id}`).then((r) => r.data),
 };

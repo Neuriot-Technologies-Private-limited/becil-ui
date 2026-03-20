@@ -1,4 +1,4 @@
-import { api, getBaseUrl } from "../api";
+import { api } from "../api";
 import type { AdMaster } from "@/types";
 
 export interface AdCreatePayload {
@@ -23,5 +23,5 @@ export const adsService = {
   updateStatus: (id: number, status: string) =>
     api.put<AdMaster>("/ads/status", { id, status }).then((r) => r.data),
 
-  getUploadAudioUrl: () => `${getBaseUrl()}/ads/upload-audio`,
+  remove: (id: number) => api.delete(`/ads/${id}`).then((r) => r.data),
 };

@@ -1,8 +1,7 @@
 import { useState, useRef } from "react";
 import { FaMusic, FaXmark } from "react-icons/fa6";
-import { getLastSegment } from "@/utils/utils";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
-import { songsService } from "@/api/services";
+import { songsService, uploadsService } from "@/api/services";
 import UploadProgressModal from "./UploadProgressModal";
 
 interface UploadSongModalProps {
@@ -19,7 +18,7 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }: Upl
   const [showProgress, setShowProgress] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   
-  const { uploadState, uploadWithProgress, setProcessing, resetUpload, setUploadState } = useUploadProgress();
+  const { uploadState, resetUpload, setUploadState } = useUploadProgress();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,33 +46,33 @@ export default function UploadSongModal({ isOpen, onClose, onSongUploaded }: Upl
 
       const duration = await getDuration(file);
 
-      // Step 1: Upload the file to S3 via FastAPI with progress
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResult = await uploadWithProgress(songsService.getUploadAudioUrl(), formData, {
-        onSuccess: (data) => {
-          setProcessing();
-        },
-        onError: (error) => {
-          console.error("Audio upload failed:", error);
-          setShowProgress(false);
-          setIsUploading(false);
-        },
-        onProgress: (progress, message) => {
-          console.log(`Progress: ${progress}% - ${message}`);
-        },
-        timeout: 180000 // 3 minutes timeout
+      // Step 1: Get pre-signed upload URL
+      const presign = await uploadsService.presign({
+        filename: file.name,
+        upload_type: "songs",
+        content_type: file.type || "audio/mpeg",
       });
-      
-      const { url } = uploadResult;
+
+      // Step 2: Upload directly to S3
+      setUploadState({ progress: 0, status: "uploading", message: "Uploading to S3..." });
+      await uploadsService.uploadToS3(presign.upload_url, file, (progress) => {
+        setUploadState({
+          progress,
+          status: "uploading",
+          message: `Uploading... ${progress}%`,
+        });
+      });
+
+      // Step 3: Ask backend to verify uploaded object
+      setUploadState({ progress: 100, status: "processing", message: "Verifying upload..." });
+      await uploadsService.complete(presign.file_key);
 
       // Step 2: Submit song metadata to FastAPI
       const newSong = await songsService.create({
         artist,
         name,
         duration,
-        filename: getLastSegment(url),
+        filename: presign.file_key.split("/").pop() ?? file.name,
         status,
       });
       onSongUploaded(newSong);
