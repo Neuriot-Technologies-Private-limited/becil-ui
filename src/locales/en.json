@@ -116,7 +116,7 @@
     "uploadSuccess": "Broadcast uploaded successfully",
     "uploadError": "Failed to upload broadcast",
     "viewWaveform": "View Waveform",
-    "detectionResults": "Detection Results",
+    "detectionResults": "Monitoring Report",
     "adDetected": "Ad Detected",
     "songDetected": "Song Detected",
     "noDetection": "No Detection",
