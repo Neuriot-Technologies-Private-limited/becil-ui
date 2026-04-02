@@ -38,7 +38,7 @@ export default function LanguageSwitcher({ className = "", variant = "default" }
             : "border border-gray-600 bg-transparent text-white hover:border-gray-400"
         )}
       >
-        US
+        EN
       </button>
       <button
         type="button"
@@ -51,7 +51,7 @@ export default function LanguageSwitcher({ className = "", variant = "default" }
             : "border border-gray-600 bg-transparent text-white hover:border-gray-400"
         )}
       >
-        BR
+        PT
       </button>
     </div>
   );
