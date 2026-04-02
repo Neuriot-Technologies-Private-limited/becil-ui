@@ -162,12 +162,13 @@ export default function Broadcasts() {
     }
     try {
       setButtonLoading({ id: broadcast.id, type: forceRegenerate ? "RegenerateReport" : "Report" });
-      const blob = await broadcastsService.getReport(broadcast.id, forceRegenerate);
+      const { blob, filename } = await broadcastsService.getReport(broadcast.id, forceRegenerate);
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Report_${broadcast.broadcast_recording}.xlsx`;
+      a.download =
+        filename ?? `Report_${broadcast.broadcast_recording}.xlsx`;
       a.click();
 
       URL.revokeObjectURL(url);
