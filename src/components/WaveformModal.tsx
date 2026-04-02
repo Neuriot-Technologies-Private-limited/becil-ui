@@ -19,6 +19,24 @@ type WaveformModalProps = {
   curDuration: CurDurationType;
 };
 
+function cleanDetectionLabel(raw: string | null | undefined): string {
+  const s = (raw ?? "").trim();
+  if (!s) return "";
+
+  // Backend often stores: "<uuid>_<Brand>_<Ad Name>_ <freq> <date>"
+  // Business UI should show: "<Brand>_<Ad Name>"
+  // 1) Remove leading "<uuid>_" prefix
+  let out = s.replace(/^[0-9a-fA-F-]{8,}_/, "");
+
+  // 2) Remove trailing " _ <number> ..." chunk (e.g., "_ 91.1 06.12.2021")
+  out = out.replace(/_\s*\d[\d.]*.*$/, "");
+
+  // 3) Trim trailing separators/spaces
+  out = out.replace(/[_\s]+$/g, "");
+
+  return out;
+}
+
 export default function WaveformModal({ isOpen, onClose, broadcast, waveformData, curDuration: _curDuration }: WaveformModalProps) {
   const adCount = waveformData.data.filter((ad) => ad.clip_type === "ad").length;
   const totalAdDuration = waveformData.data.filter((ad) => ad.clip_type === "ad").reduce((sum, ad) => sum + ad.duration_seconds, 0);
@@ -220,9 +238,10 @@ export default function WaveformModal({ isOpen, onClose, broadcast, waveformData
                     <TableRow key={index} className="border-neutral-800 hover:bg-neutral-800">
                       <TableCell>{item.clip_type === "ad" ? "Ad" : item.clip_type === "song" ? "Song" : item.clip_type === "speech" ? "Speech" : "Empty"}</TableCell>
                       <TableCell>
-                        {item.brand && item.description
-                          ? `${item.brand} - ${item.description}`
-                          : item.description || item.brand || "N/A"}
+                        {cleanDetectionLabel(item.description) ||
+                          item.description ||
+                          item.brand ||
+                          "N/A"}
                       </TableCell>
                       <TableCell>{formatSecondsToHHMMSS(item.start_time_seconds)}</TableCell>
                       <TableCell>{formatSecondsToHHMMSS(item.end_time_seconds)}</TableCell>
