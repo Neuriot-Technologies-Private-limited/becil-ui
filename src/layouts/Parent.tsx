@@ -6,7 +6,7 @@ import { MdHearing, MdLogout, MdMenu, MdClose } from "react-icons/md";
 import { FaMicrophone } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import { Outlet } from "react-router";
-import { PiGear } from "react-icons/pi";
+
 import { GoTriangleLeft, GoTriangleRight } from "react-icons/go";
 import { HiOutlineExternalLink } from "react-icons/hi";
 import { useTranslation } from "react-i18next";
@@ -58,11 +58,10 @@ export default function Parent() {
     { no: 2, title: t("navigation.songMasters"), path: "/songmasters", icon: <GiMusicalNotes size={20} className="shrink-0" /> },
     { no: 3, title: t("navigation.rjMasters"), path: "/rjmasters", icon: <FaMicrophone size={20} className="shrink-0" /> },
     { no: 4, title: t("navigation.broadcasts"), path: "/broadcasts", icon: <FaBroadcastTower size={20} className="shrink-0" /> },
-    { no: 5, title: t("navigation.settings"), path: "/settings", icon: <PiGear size={20} className="shrink-0" /> },
   ];
 
   const handleLink = (path: string) => {
-    if (["/admasters", "/broadcasts", "/login", "/songmasters", "/rjmasters"].includes(path)) {
+    if (["/admasters", "/broadcasts", "/login", "/songmasters", "/rjmasters", "/settings"].includes(path)) {
       navigate(path);
       setMobileNavOpen(false);
     }

@@ -84,7 +84,7 @@ export default function Broadcasts() {
 
 
   useEffect(() => {
-    setActiveLink(3);
+    setActiveLink(4);
     const fetchBroadcasts = async () => {
       try {
         const params: { radio_station?: string; broadcast_recording?: string } = {};
