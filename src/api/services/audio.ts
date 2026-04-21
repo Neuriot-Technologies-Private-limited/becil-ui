@@ -1,6 +1,6 @@
 import { api } from "../api";
 
-type AudioType = "ads" | "songs" | "broadcasts";
+type AudioType = "ads" | "songs" | "broadcasts" | "rjmasters";
 
 export const audioService = {
   getBlob: (type: AudioType, filename: string) =>

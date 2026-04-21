@@ -63,6 +63,7 @@
   "navigation": {
     "adMasters": "Mestres de Anúncios",
     "songMasters": "Mestres de Músicas",
+    "rjMasters": "Mestre RJ",
     "broadcasts": "Transmissões",
     "settings": "Configurações",
     "logout": "Sair",
@@ -123,6 +124,19 @@
     "confidence": "Confiança",
     "startTime": "Tempo de Início",
     "endTime": "Tempo de Fim"
+  },
+  "rjMasters": {
+    "title": "Mestre RJ",
+    "uploadNewRj": "Enviar Novo Áudio RJ",
+    "rjName": "Nome do RJ",
+    "showName": "Nome do Programa",
+    "uploadDate": "Data de Envio",
+    "searchByRjName": "Pesquisar por nome do RJ...",
+    "searchByShowName": "Pesquisar por nome do programa...",
+    "noRjFound": "Nenhum áudio RJ encontrado",
+    "emptyLibraryHint": "Envie um áudio RJ para vê-lo nesta lista.",
+    "uploadSuccess": "Áudio RJ enviado com sucesso",
+    "uploadError": "Falha ao enviar áudio RJ"
   },
   "upload": {
     "progress": "Progresso do Envio",

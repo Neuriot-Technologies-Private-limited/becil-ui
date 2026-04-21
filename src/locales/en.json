@@ -63,6 +63,7 @@
   "navigation": {
     "adMasters": "Ad Masters",
     "songMasters": "Song Masters",
+    "rjMasters": "RJ Master",
     "broadcasts": "Broadcasts",
     "settings": "Settings",
     "logout": "Logout",
@@ -123,6 +124,19 @@
     "confidence": "Confidence",
     "startTime": "Start Time",
     "endTime": "End Time"
+  },
+  "rjMasters": {
+    "title": "RJ Master",
+    "uploadNewRj": "Upload New RJ Audio",
+    "rjName": "RJ Name",
+    "showName": "Show Name",
+    "uploadDate": "Upload Date",
+    "searchByRjName": "Search by RJ name...",
+    "searchByShowName": "Search by show name...",
+    "noRjFound": "No RJ audio found",
+    "emptyLibraryHint": "Upload an RJ audio to see it in this list.",
+    "uploadSuccess": "RJ audio uploaded successfully",
+    "uploadError": "Failed to upload RJ audio"
   },
   "upload": {
     "progress": "Upload Progress",

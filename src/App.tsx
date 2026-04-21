@@ -5,6 +5,7 @@ import Login from "@/views/Login";
 import Parent from "@/layouts/Parent";
 import "/src/App.css"
 import SongMasters from "./views/SongMasters";
+import RjMasters from "./views/RjMasters";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
             <Route path="/broadcasts" element={<Broadcasts />} />
             <Route path="/admasters" element={<AdMasters />} />
             <Route path="/songmasters" element={<SongMasters />} />
+            <Route path="/rjmasters" element={<RjMasters />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Login />} />

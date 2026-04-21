@@ -1,7 +1,7 @@
 import axios from "axios";
 import { api } from "../api";
 
-export type UploadType = "ads" | "broadcasts" | "songs";
+export type UploadType = "ads" | "broadcasts" | "songs" | "rjmasters";
 
 export interface PresignUploadRequest {
   filename: string;

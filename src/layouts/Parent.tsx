@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { GiMusicalNotes } from "react-icons/gi";
 import { FaBroadcastTower } from "react-icons/fa";
 import { MdHearing, MdLogout, MdMenu, MdClose } from "react-icons/md";
+import { FaMicrophone } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import { Outlet } from "react-router";
 import { PiGear } from "react-icons/pi";
@@ -55,12 +56,13 @@ export default function Parent() {
   const mainNavItems = [
     { no: 1, title: t("navigation.adMasters"), path: "/admasters", icon: <MdHearing size={20} className="shrink-0" /> },
     { no: 2, title: t("navigation.songMasters"), path: "/songmasters", icon: <GiMusicalNotes size={20} className="shrink-0" /> },
-    { no: 3, title: t("navigation.broadcasts"), path: "/broadcasts", icon: <FaBroadcastTower size={20} className="shrink-0" /> },
-    { no: 4, title: t("navigation.settings"), path: "/settings", icon: <PiGear size={20} className="shrink-0" /> },
+    { no: 3, title: t("navigation.rjMasters"), path: "/rjmasters", icon: <FaMicrophone size={20} className="shrink-0" /> },
+    { no: 4, title: t("navigation.broadcasts"), path: "/broadcasts", icon: <FaBroadcastTower size={20} className="shrink-0" /> },
+    { no: 5, title: t("navigation.settings"), path: "/settings", icon: <PiGear size={20} className="shrink-0" /> },
   ];
 
   const handleLink = (path: string) => {
-    if (["/admasters", "/broadcasts", "/login", "/songmasters"].includes(path)) {
+    if (["/admasters", "/broadcasts", "/login", "/songmasters", "/rjmasters"].includes(path)) {
       navigate(path);
       setMobileNavOpen(false);
     }

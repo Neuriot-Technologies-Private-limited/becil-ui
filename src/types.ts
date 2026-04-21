@@ -58,3 +58,13 @@ export interface SongMaster{
   filename: string;
   status: string;
 }
+
+export interface RjMaster{
+  id: number;
+  rj_name: string;
+  show_name: string;
+  upload_date: Date;
+  duration: number;
+  filename: string;
+  status: string;
+}
