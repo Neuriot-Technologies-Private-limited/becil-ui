@@ -59,6 +59,7 @@ export interface SongMaster{
   status: string;
 }
 
+/** @deprecated Use RjClip instead */
 export interface RjMaster{
   id: number;
   rj_name: string;
@@ -67,4 +68,33 @@ export interface RjMaster{
   duration: number;
   filename: string;
   status: string;
+}
+
+/** Matches backend RJClipOut schema */
+export interface RjClip {
+  id: number;
+  rj_name: string | null;
+  radio_station: string | null;
+  filename: string;
+  duration: number | null;
+  status: string;
+  broadcast_id: number | null;
+  start_sec: number | null;
+  end_sec: number | null;
+  upload_date: string;
+  transcript_romanized: string | null;
+  transcript_hindi: string | null;
+}
+
+/** Matches backend RJBrandMentionOut schema */
+export interface RjBrandMention {
+  id: number;
+  rj_clip_id: number;
+  brand: string;
+  matched_text: string | null;
+  start_sec: number | null;
+  end_sec: number | null;
+  match_score: number | null;
+  transcript_fragment: string | null;
+  created_at: string;
 }
