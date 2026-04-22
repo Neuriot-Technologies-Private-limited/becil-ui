@@ -34,7 +34,13 @@ img, picture, video, canvas, svg {
 }
 
 input, button, textarea, select {
+  cursor: pointer;
 }
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 
 /* 8. Avoid text overflows */
 p, h1, h2, h3, h4, h5, h6 {
